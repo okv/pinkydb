@@ -19,8 +19,18 @@ describe('', function() {
 	console.log(func(obj));
 	var db = ds.db(),
 		things = db.collection('things');
-	things.insert({name: 'apple', color: 'red'});
-	things.insert({name: 'banana', color: 'red'});
+	things.insert([
+		{name: 'apple', color: 'red'},
+		{name: 'banana', color: 'red'}
+	]);
 	things.insert({name: 'aaa', color: 'bbb'});
-	console.log(things.find({color: 'red'}))
+	things.update({name: 'banana'}, {name: 'banananananna', color: 'red'}, function(err){
+		console.log('>> after update = ', arguments)
+	});
+	things.findOne({color: 'red'}, function(err, docs) {
+		console.log(err, docs)
+	});
+	things.find({color: 'red'}, function(err, docs) {
+		console.log(err, docs)
+	});
 });
