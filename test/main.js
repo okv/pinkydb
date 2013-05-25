@@ -28,9 +28,12 @@ describe('', function() {
 		console.log('>> after update = ', arguments)
 	});
 	things.findOne({color: 'red'}, function(err, docs) {
-		console.log(err, docs)
+		console.log('findOne = ', err, docs)
 	});
-	things.find({color: 'red'}, function(err, docs) {
-		console.log(err, docs)
+	things.find({color: 'red'}).toArray(function(err, docs) {
+		console.log('find = ', err, docs)
+	});
+	things.find({color: 'red'}).count(function(err, count) {
+		console.log('find = ', err, count)
 	});
 });
