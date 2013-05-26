@@ -88,4 +88,43 @@ describe('collection', function() {
 		});
 	});
 
+	describe('update', function() {
+		it('single whole document', function(done) {
+			doc.name = 'pineapple';
+			doc.price = 15;
+			fruits.update({_id: doc._id}, doc, done);
+		});
+
+		it('check that updated document equals to stored', function(done) {
+			fruits.findOne({_id: doc._id}, function(err, sdoc) {
+				if (err) done(err);
+				expect(doc).eql(sdoc);
+				done();
+			});
+		});
+
+		it('expect an error when try to change _id', function(done) {
+			var id = doc._id;
+			doc._id++;
+			fruits.update({_id: id}, doc, function(err) {
+				expect(err).ok();
+				expect(err).a(Error);
+				expect(err.message).ok();
+				expect(err.message).contain('change `_id`');
+				done();
+			});
+			doc._id--;
+		});
+
+		it('expect that multi update unsupported', function(done) {
+			fruits.update({}, doc, {multi: true}, function(err) {
+				expect(err).ok();
+				expect(err).a(Error);
+				expect(err.message).ok();
+				expect(err.message).contain('currently unsupported');
+				done();
+			});
+		});
+	});
+
 });
