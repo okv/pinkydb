@@ -17,7 +17,7 @@ describe('', function() {
 	var func = qcompile(query);
 	console.log(func.toString());
 	console.log(func(obj));
-	ds.open({storage: {path: __dirname}}, function(err, client) {
+	ds.open({storage: {type: 'memory', path: __dirname}}, function(err, client) {
 		var db = client.db('test'),
 			things = db.collection('things');
 		things.insert([
