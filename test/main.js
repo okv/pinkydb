@@ -47,8 +47,11 @@ describe('', function() {
 			things.find({color: 'red'}).toArray(function(err, docs) {
 				console.log('find = ', err, docs);
 			});
-			things.find({color: 'red'}).count(function(err, count) {
-				console.log('count = ', err, count);
+			things.remove({color: 'red'}, function(err) {
+				if (err) throw err;
+				things.find({color: 'red'}).count(function(err, count) {
+					console.log('count = ', err, count);
+				});
 			});
 		}
 	});
