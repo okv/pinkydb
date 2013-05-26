@@ -19,9 +19,16 @@ describe('collection', function() {
 		fruits.remove({}, done);
 	});
 
-	describe('insert', function() {
-		var doc = {name: 'apple', price: 5, colors: ['red', 'green']};
+	var doc = {name: 'apple', price: 5, colors: ['red', 'green']},
+		docs = [
+			{name: 'pear', price: 7, colors: ['yellow', 'red']},
+			{name: 'banana', price: 10, colors: ['yellow', 'green']}
+		],
+		docWithId = {
+			_id: 'GRAPE', name: 'grape', price: 13, colors: ['margin', 'green']
+		};
 
+	describe('insert', function() {
 		it('single document without errors', function(done) {
 			fruits.insert(doc, done);
 		});
@@ -31,11 +38,6 @@ describe('collection', function() {
 			expect(doc._id).a('number');
 			done();
 		});
-
-		var docs = [
-			{name: 'pear', price: 7, colors: ['yellow', 'red']},
-			{name: 'banana', price: 10, colors: ['yellow', 'green']}
-		];
 
 		it('batch without errors', function(done) {
 			fruits.insert(docs, done);
@@ -49,9 +51,6 @@ describe('collection', function() {
 			done();
 		});
 
-		var docWithId = {
-			_id: 'GRAPE', name: 'grape', price: 13, colors: ['margin', 'green']
-		};
 		it('document with custom _id', function(done) {
 			fruits.insert(docWithId, done);
 		});
@@ -69,6 +68,21 @@ describe('collection', function() {
 				expect(err.message).ok();
 				expect(err.message).contain('violation');
 				expect(err.message).contain(doc._id);
+				done();
+			});
+		});
+
+		it('check that all docuemnts equal to stored documents', function(done) {
+			var allDocs = {};
+			[doc, docWithId].concat(docs).forEach(function(doc){
+				allDocs[doc._id] = doc;
+			});
+			fruits.find({}).toArray(function(err, docs) {
+				if (err) done(err);
+				docs.forEach(function(doc) {
+					expect(allDocs).have.key(String(doc._id));
+					expect(allDocs[doc._id]).eql(doc);
+				});
 				done();
 			});
 		});
