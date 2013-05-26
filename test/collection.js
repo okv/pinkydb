@@ -3,7 +3,7 @@
 var expect = require('expect.js'),
 	ds = require('../lib');
 
-describe('expect collection', function() {
+describe('collection', function() {
 	var client = null, db = null, fruits = null;
 	it('connect to db', function(done) {
 		ds.open({storage:{path: '/tmp'}}, function(err, cl) {
@@ -56,10 +56,21 @@ describe('expect collection', function() {
 			fruits.insert(docWithId, done);
 		});
 
-		it('document has same _id after insert', function(done) {
+		it('document has same custom _id after insert', function(done) {
 			expect(docWithId).have.key('_id');
 			expect(docWithId._id).equal('GRAPE');
 			done();
+		});
+
+		it('expect an error when try to violate unique _id', function(done) {
+			fruits.insert(doc, function(err) {
+				expect(err).ok();
+				expect(err).a(Error);
+				expect(err.message).ok();
+				expect(err.message).contain('violation');
+				expect(err.message).contain(doc._id);
+				done();
+			});
 		});
 	});
 
