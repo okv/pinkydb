@@ -19,38 +19,40 @@ describe('collection', function() {
 		fruits.remove({}, done);
 	});
 
-	var doc = {name: 'apple', price: 5, colors: ['red', 'green']},
-		docs = [
-			{name: 'pear', price: 7, colors: ['yellow', 'red']},
-			{name: 'banana', price: 10, colors: ['yellow', 'green']}
-		],
-		docWithId = {
-			_id: 'GRAPE', name: 'grape', price: 13, colors: ['margin', 'green']
-		};
+	// tests documens
+	var tdocs = [
+		{name: 'apple', price: 5, colors: ['red', 'green']},
+		{name: 'pear', price: 7, colors: ['yellow', 'red']},
+		{name: 'banana', price: 10, colors: ['yellow', 'green']},
+		// document with self defined id
+		{_id: 'GRAPE', name: 'grape', price: 13, colors: ['margin', 'green']}
+	];
 
 	describe('insert', function() {
 		it('single document without errors', function(done) {
-			fruits.insert(doc, done);
+			fruits.insert(tdocs[0], done);
 		});
 
 		it('document has an _id', function(done) {
-			expect(doc).have.key('_id');
-			expect(doc._id).a('number');
+			expect(tdocs[0]).have.key('_id');
+			expect(tdocs[0]._id).a('number');
 			done();
 		});
 
+		var batch = tdocs.slice(1, 3);
 		it('batch without errors', function(done) {
-			fruits.insert(docs, done);
+			fruits.insert(batch, done);
 		});
 
 		it('documents has an _id', function(done) {
-			docs.forEach(function(doc) {
+			batch.forEach(function(doc) {
 				expect(doc).have.key('_id');
 				expect(doc._id).a('number');
 			});
 			done();
 		});
 
+		var docWithId = tdocs[3];
 		it('document with custom _id', function(done) {
 			fruits.insert(docWithId, done);
 		});
@@ -62,21 +64,19 @@ describe('collection', function() {
 		});
 
 		it('expect an error when try to violate unique _id', function(done) {
-			fruits.insert(doc, function(err) {
+			fruits.insert(tdocs[0], function(err) {
 				expect(err).ok();
 				expect(err).a(Error);
 				expect(err.message).ok();
 				expect(err.message).contain('violation');
-				expect(err.message).contain(doc._id);
+				expect(err.message).contain(tdocs[0]._id);
 				done();
 			});
 		});
 
 		it('check that all docuemnts equal to stored documents', function(done) {
 			var allDocs = {};
-			[doc, docWithId].concat(docs).forEach(function(doc){
-				allDocs[doc._id] = doc;
-			});
+			tdocs.forEach(function(doc){ allDocs[doc._id] = doc; });
 			fruits.find({}).toArray(function(err, docs) {
 				if (err) done(err);
 				docs.forEach(function(doc) {
@@ -90,34 +90,34 @@ describe('collection', function() {
 
 	describe('update', function() {
 		it('single whole document', function(done) {
-			doc.name = 'pineapple';
-			doc.price = 15;
-			fruits.update({_id: doc._id}, doc, done);
+			tdocs[0].name = 'pineapple';
+			tdocs[0].price = 15;
+			fruits.update({_id: tdocs[0]._id}, tdocs[0], done);
 		});
 
 		it('check that updated document equals to stored', function(done) {
-			fruits.findOne({_id: doc._id}, function(err, sdoc) {
+			fruits.findOne({_id: tdocs[0]._id}, function(err, doc) {
 				if (err) done(err);
-				expect(doc).eql(sdoc);
+				expect(tdocs[0]).eql(doc);
 				done();
 			});
 		});
 
 		it('expect an error when try to change _id', function(done) {
-			var id = doc._id;
-			doc._id++;
-			fruits.update({_id: id}, doc, function(err) {
+			var id = tdocs[0]._id;
+			tdocs[0]._id++;
+			fruits.update({_id: id}, tdocs[0], function(err) {
 				expect(err).ok();
 				expect(err).a(Error);
 				expect(err.message).ok();
 				expect(err.message).contain('change `_id`');
 				done();
 			});
-			doc._id--;
+			tdocs[0]._id--;
 		});
 
 		it('expect that multi update unsupported', function(done) {
-			fruits.update({}, doc, {multi: true}, function(err) {
+			fruits.update({}, tdocs[0], {multi: true}, function(err) {
 				expect(err).ok();
 				expect(err).a(Error);
 				expect(err.message).ok();
@@ -130,25 +130,26 @@ describe('collection', function() {
 	describe('find', function() {
 		describe('equal', function() {
 			it('primitive', function(done) {
-				fruits.find({price: doc.price}).toArray(function(err, docs) {
+				fruits.find({price: tdocs[0].price}).toArray(function(err, docs) {
 					if (err) done(err);
 					expect(docs).length(1);
-					expect(docs[0]).eql(doc);
+					expect(docs[0]).eql(tdocs[0]);
 					done();
 				});
 			});
 		});
 		describe('in', function() {
 			it('primitive in array', function(done) {
-				var prices = docs.map(function(doc) { return doc.price; });
-				fruits.find({price: {$in: prices}}).toArray(function(err, sdocs) {
+				var batch = tdocs.slice(1, 3);
+				var prices = batch.map(function(doc) { return doc.price; });
+				fruits.find({price: {$in: prices}}).toArray(function(err, docs) {
 					if (err) done(err);
-					sdocs.forEach(function(sdoc) {
-						var fdocs = docs.filter(function(doc) {
-							return doc._id == sdoc._id;
+					docs.forEach(function(doc) {
+						var fdocs = batch.filter(function(bdoc) {
+							return bdoc._id == doc._id;
 						});
 						expect(fdocs).length(1);
-						expect(fdocs[0]).eql(sdoc);
+						expect(fdocs[0]).eql(doc);
 					});
 					done();
 				});
