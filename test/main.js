@@ -17,7 +17,7 @@ describe('', function() {
 	var func = qcompile(query);
 	console.log(func.toString());
 	console.log(func(obj));
-	ds.open({}, function(err, client) {
+	ds.open({storage: {path: __dirname}}, function(err, client) {
 		var db = client.db('test'),
 			things = db.collection('things');
 		things.insert([
@@ -50,5 +50,9 @@ describe('', function() {
 				console.log('count = ', err, count);
 			});
 		}
+	});
+
+	it('delay', function(done) {
+		setTimeout(done, 50);
 	});
 });
