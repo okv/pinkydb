@@ -3,7 +3,7 @@
 var expect = require('expect.js'),
 	ds = require('../lib');
 
-describe('except collection', function() {
+describe('expect collection', function() {
 	var client = null, db = null, fruits = null;
 	it('connect to db', function(done) {
 		ds.open({storage:{path: '/tmp'}}, function(err, cl) {
@@ -15,18 +15,51 @@ describe('except collection', function() {
 		});
 	});
 
+	it('clean collection', function(done) {
+		fruits.remove({}, done);
+	});
+
 	describe('insert', function() {
-		var apple = null;
+		var doc = {name: 'apple', price: 5, colors: ['red', 'green']};
+
 		it('single document without errors', function(done) {
-			apple = {name: 'apple', price: 5, colors: ['red', 'green']};
-			fruits.insert(apple, done);
+			fruits.insert(doc, done);
 		});
 
-		var banana = null, pear = null;
+		it('document has an _id', function(done) {
+			expect(doc).have.key('_id');
+			expect(doc._id).a('number');
+			done();
+		});
+
+		var docs = [
+			{name: 'pear', price: 7, colors: ['yellow', 'red']},
+			{name: 'banana', price: 10, colors: ['yellow', 'green']}
+		];
+
 		it('batch without errors', function(done) {
-			var pear = {name: 'pear', price: 7, colors: ['yellow', 'red']},
-				banana = {name: 'banana', price: 10, colors: ['yellow', 'green']};
-			fruits.insert([pear, banana], done);
+			fruits.insert(docs, done);
+		});
+
+		it('documents has an _id', function(done) {
+			docs.forEach(function(doc) {
+				expect(doc).have.key('_id');
+				expect(doc._id).a('number');
+			});
+			done();
+		});
+
+		var docWithId = {
+			_id: 'GRAPE', name: 'grape', price: 13, colors: ['margin', 'green']
+		};
+		it('document with custom _id', function(done) {
+			fruits.insert(docWithId, done);
+		});
+
+		it('document has same _id after insert', function(done) {
+			expect(docWithId).have.key('_id');
+			expect(docWithId._id).equal('GRAPE');
+			done();
 		});
 	});
 
