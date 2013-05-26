@@ -23,23 +23,32 @@ describe('', function() {
 		things.insert([
 			{name: 'apple', color: 'red'},
 			{name: 'banana', color: 'red'}
-		]);
-		things.insert({name: 'aaa', color: 'bbb'});
-		things.update(
-			{name: 'banana'},
-			{name: 'banananananna', color: 'red'},
-			function(err){
-				console.log('>> after update = ', arguments)
-			}
-		);
-		things.findOne({color: 'red'}, function(err, docs) {
-			console.log('findOne = ', err, docs);
+		], function(err) {
+			if (err) done(err);
+			things.insert({name: 'aaa', color: 'bbb'}, function(err) {
+				if (err) done(err);
+				things.update(
+					{name: 'banana'},
+					{name: 'banananananna', color: 'red'},
+					function(err){
+						if (err) done(err);
+						console.log('>> after update = ', arguments);
+						find();
+					}
+				);
+			});
 		});
-		things.find({color: 'red'}).toArray(function(err, docs) {
-			console.log('find = ', err, docs);
-		});
-		things.find({color: 'red'}).count(function(err, count) {
-			console.log('count = ', err, count);
-		});
+
+		function find() {
+			things.findOne({color: 'red'}, function(err, docs) {
+				console.log('findOne = ', err, docs);
+			});
+			things.find({color: 'red'}).toArray(function(err, docs) {
+				console.log('find = ', err, docs);
+			});
+			things.find({color: 'red'}).count(function(err, count) {
+				console.log('count = ', err, count);
+			});
+		}
 	});
 });
