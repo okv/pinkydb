@@ -24,14 +24,14 @@ describe('', function() {
 			{name: 'apple', color: 'red'},
 			{name: 'banana', color: 'red'}
 		], function(err) {
-			if (err) done(err);
+			if (err) throw err;
 			things.insert({name: 'aaa', color: 'bbb'}, function(err) {
-				if (err) done(err);
+				if (err) throw err;
 				things.update(
 					{name: 'banana'},
 					{name: 'banananananna', color: 'red'},
 					function(err){
-						if (err) done(err);
+						if (err) throw err;
 						console.log('>> after update = ', arguments);
 						find();
 					}
@@ -39,6 +39,7 @@ describe('', function() {
 			});
 		});
 
+//		find()
 		function find() {
 			things.findOne({color: 'red'}, function(err, docs) {
 				console.log('findOne = ', err, docs);
