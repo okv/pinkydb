@@ -127,4 +127,32 @@ describe('collection', function() {
 		});
 	});
 
+	describe('find', function() {
+		describe('equal', function() {
+			it('primitive', function(done) {
+				fruits.find({price: doc.price}).toArray(function(err, docs) {
+					if (err) done(err);
+					expect(docs).length(1);
+					expect(docs[0]).eql(doc);
+					done();
+				});
+			});
+		});
+		describe('in', function() {
+			it('primitive in array', function(done) {
+				var prices = docs.map(function(doc) { return doc.price; });
+				fruits.find({price: {$in: prices}}).toArray(function(err, sdocs) {
+					if (err) done(err);
+					sdocs.forEach(function(sdoc) {
+						var fdocs = docs.filter(function(doc) {
+							return doc._id == sdoc._id;
+						});
+						expect(fdocs).length(1);
+						expect(fdocs[0]).eql(sdoc);
+					});
+					done();
+				});
+			});
+		});
+	});
 });
