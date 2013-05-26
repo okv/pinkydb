@@ -1,11 +1,11 @@
 {
-	"name": "ds.js",
-	"description": "in-process documents storage for node.js with mongodb like queries",
+	"name": "pinkydb",
+	"description": "tiny in-process documents storage for node.js with mongodb like queries",
 	"version": "0.1.0",
 	"author": "Oleg Korobenko <oleg.korobenko@gmail.com>",
 	"repository": {
 		"type": "git",
-		"url": "git://github.com/okv/ds.js"
+		"url": "git://github.com/okv/pinkydb"
 	},
 	"keywords": [
 		"store", "storage", "db", "database", "mongo", "mongodb", "in-process", "sqlight"

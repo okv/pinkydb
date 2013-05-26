@@ -1,12 +1,12 @@
 'use strict';
 
 var expect = require('expect.js'),
-	ds = require('../lib');
+	pinkydb = require('../lib');
 
 describe('collection', function() {
 	var client = null, db = null, fruits = null;
 	it('connect to db', function(done) {
-		ds.open({storage:{path: '/tmp'}}, function(err, cl) {
+		pinkydb.open({storage:{path: '/tmp'}}, function(err, cl) {
 			if (err) done(err);
 			client = cl;
 			db = client.db('food'),

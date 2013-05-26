@@ -2,7 +2,7 @@
 
 var expect = require('expect.js'),
 	qcompile = require('../lib/query').compile,
-	ds = require('../lib');
+	pinkydb = require('../lib');
 
 describe('', function() {
 
@@ -17,7 +17,7 @@ describe('', function() {
 	var func = qcompile(query);
 	console.log(func.toString());
 	console.log(func(obj));
-	ds.open({storage: {type: 'memory', path: __dirname}}, function(err, client) {
+	pinkydb.open({storage: {type: 'memory', path: __dirname}}, function(err, client) {
 		var db = client.db('test'),
 			things = db.collection('things');
 		things.insert([
