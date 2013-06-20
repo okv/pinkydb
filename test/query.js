@@ -84,6 +84,10 @@ describe('query', function() {
 			query: {pprices: tdocs[0].pprices},
 			result: tdocs.slice(0, 1)
 		},
+		'object equal to object': {
+			query: {add: tdocs[2].add},
+			result: tdocs.slice(2, 3)
+		},
 		'simple value not equal to simple value': {
 			query: {price: {$ne: tdocs[0].price}},
 			result: tdocs.slice(1, 4)
