@@ -19,13 +19,12 @@ describe('query', function() {
 		fruits.remove({}, done);
 	});
 
-	// tests documens
+	// tests documens (pprices - previous prices)
 	var tdocs = [
-		{name: 'apple', price: 5, colors: ['red', 'green']},
-		{name: 'pear', price: 7, colors: ['yellow', 'red']},
-		{name: 'banana', price: 10, colors: ['yellow', 'green']},
-		// document with self defined id
-		{_id: 'GRAPE', name: 'grape', price: 13, colors: ['margin', 'green']}
+		{name: 'apple', price: 5, colors: ['red', 'green'], pprices: [3, 4]},
+		{name: 'pear', price: 7, colors: ['yellow', 'red'], pprices: [6]},
+		{name: 'banana', price: 10, colors: ['yellow', 'green'], pprices: [8]},
+		{name: 'grape', price: 13, colors: ['margin', 'green'], pprices: [9, 10]}
 	];
 
 	it('insert test documents', function(done) {
@@ -33,28 +32,52 @@ describe('query', function() {
 	});
 
 	var tdocsQueries = {
-		'equal to simple value': {
+		'simple value equal to simple value': {
 			query: {price: tdocs[0].price},
 			result: tdocs.slice(0, 1)
 		},
-		'not equal to simple value': {
+		'array equal to simple value': {
+			query: {colors: 'red'},
+			result: tdocs.slice(0, 2)
+		},
+		'simple value not equal to simple value': {
 			query: {price: {$ne: tdocs[0].price}},
 			result: tdocs.slice(1, 4)
 		},
-		'greater then simple value': {
+		'array not equal to simple value': {
+			query: {colors: {$ne: 'red'}},
+			result: tdocs.slice(2, 4)
+		},
+		'simple value greater then simple value': {
 			query: {price: {$gt: tdocs[1].price}},
 			result: tdocs.slice(2, 4)
 		},
-		'greater or equal to simple value': {
+		'array greater then simple value': {
+			query: {pprices: {$gt: 6}},
+			result: tdocs.slice(2, 4)
+		},
+		'simple value greater or equal to simple value': {
+			query: {pprices: {$gte: 6}},
+			result: tdocs.slice(1, 4)
+		},
+		'array greater or equal to simple value': {
 			query: {price: {$gte: tdocs[1].price}},
 			result: tdocs.slice(1, 4)
 		},
-		'less then simple value': {
+		'simple value less then simple value': {
 			query: {price: {$lt: tdocs[1].price}},
 			result: tdocs.slice(0, 1)
 		},
-		'less or equal then simple value': {
+		'array less then simple value': {
+			query: {pprices: {$lt: 6}},
+			result: tdocs.slice(0, 1)
+		},
+		'simple value less or equal then simple value': {
 			query: {price: {$lte: tdocs[1].price}},
+			result: tdocs.slice(0, 2)
+		},
+		'array less or equal then simple value': {
+			query: {pprices: {$lte: 6}},
 			result: tdocs.slice(0, 2)
 		},
 		'simple value in array': {
@@ -65,7 +88,7 @@ describe('query', function() {
 		}
 	};
 
-	describe('find', function() {
+	describe('find where', function() {
 		// generate test for each query from `tdocsQueries`
 		Object.keys(tdocsQueries).forEach(function(queryName) {
 			it(queryName, function(done) {
