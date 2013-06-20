@@ -19,13 +19,53 @@ describe('query', function() {
 		fruits.remove({}, done);
 	});
 
-	// tests documens (pprices - previous prices)
-	var tdocs = [
-		{name: 'apple', price: 5, colors: ['red', 'green'], pprices: [3, 4]},
-		{name: 'pear', price: 7, colors: ['yellow', 'red'], pprices: [6]},
-		{name: 'banana', price: 10, colors: ['yellow', 'green'], pprices: [8]},
-		{name: 'grape', price: 13, colors: ['margin', 'green'], pprices: [9, 10]}
-	];
+	/**
+	 * Tests documents (`pprices` - previous prices, `add` - additional
+	 * parameters)
+	 */
+	var tdocs = [{
+		name: 'apple',
+		price: 5,
+		pprices: [3, 4],
+		add: {
+			colors: ['red', 'green']
+		}
+	}, {
+		name: 'pear',
+		price: 7,
+		pprices: [6],
+		add: {
+			colors: ['yellow', 'red']
+		}
+	}, {
+		name: 'banana',
+		price: 10,
+		pprices: [8],
+		add: {
+			colors: ['yellow', 'green'],
+			production: [{
+				country: 'India', ratio: 20
+			}, {
+				country: 'Uganda', ratio: 8
+			}, {
+				country: 'China', ratio: 7
+			}]
+		}
+	}, {
+		name: 'grape',
+		price: 13,
+		pprices: [9, 10],
+		add: {
+			colors: ['margin', 'green'],
+			production: [{
+				country: 'China', ratio: 13
+			}, {
+				country: 'Italy', ratio: 11
+			}, {
+				country: 'USA', ratio: 9
+			}]
+		}
+	}];
 
 	it('insert test documents', function(done) {
 		fruits.insert(tdocs, done);
@@ -37,11 +77,11 @@ describe('query', function() {
 			result: tdocs.slice(0, 1)
 		},
 		'array equal to simple value': {
-			query: {colors: 'red'},
-			result: tdocs.slice(0, 2)
+			query: {pprices: 3},
+			result: tdocs.slice(0, 1)
 		},
 		'array equal to array': {
-			query: {colors: tdocs[0].colors},
+			query: {pprices: tdocs[0].pprices},
 			result: tdocs.slice(0, 1)
 		},
 		'simple value not equal to simple value': {
@@ -49,8 +89,8 @@ describe('query', function() {
 			result: tdocs.slice(1, 4)
 		},
 		'array not equal to simple value': {
-			query: {colors: {$ne: 'red'}},
-			result: tdocs.slice(2, 4)
+			query: {pprices: {$ne: 3}},
+			result: tdocs.slice(1, 4)
 		},
 		'simple value greater then simple value': {
 			query: {price: {$gt: tdocs[1].price}},
@@ -90,18 +130,18 @@ describe('query', function() {
 			})}},
 			result: tdocs.slice(1, 3)
 		},
-		'price equal to 5 $or colors contain yellow': {
-			query: {$or: [{price: 5}, {colors: 'yellow'}]},
+		'$or': {
+			query: {$or: [{price: 5}, {pprices: {$gt: 4, $lt: 9}}]},
 			result: tdocs.slice(0, 3)
 		},
-		'price equal to 5 $and colors contain green': {
-			query: {$and: [{price: 5}, {colors: 'green'}]},
+		'$and': {
+			query: {$and: [{price: 5}, {pprices: 3}]},
 			result: tdocs.slice(0, 1)
 		},
 		'$and inside $or': {
 			query: {$or: [
-				{$and: [{price: 5}, {colors: 'green'}]},
-				{$and: [{price: 7}, {colors: 'yellow'}]}
+				{$and: [{price: 5}, {pprices: 3}]},
+				{$and: [{price: 7}, {pprices: 6}]}
 			]},
 			result: tdocs.slice(0, 2)
 		}
