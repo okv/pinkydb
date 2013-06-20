@@ -85,6 +85,21 @@ describe('query', function() {
 				return doc.price;
 			})}},
 			result: tdocs.slice(1, 3)
+		},
+		'price equal to 5 $or colors contain yellow': {
+			query: {$or: [{price: 5}, {colors: 'yellow'}]},
+			result: tdocs.slice(0, 3)
+		},
+		'price equal to 5 $and colors contain green': {
+			query: {$and: [{price: 5}, {colors: 'green'}]},
+			result: tdocs.slice(0, 1)
+		},
+		'$and inside $or': {
+			query: {$or: [
+				{$and: [{price: 5}, {colors: 'green'}]},
+				{$and: [{price: 7}, {colors: 'yellow'}]}
+			]},
+			result: tdocs.slice(0, 2)
 		}
 	};
 
