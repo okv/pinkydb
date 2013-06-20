@@ -40,6 +40,10 @@ describe('query', function() {
 			query: {colors: 'red'},
 			result: tdocs.slice(0, 2)
 		},
+		'array equal to array': {
+			query: {colors: tdocs[0].colors},
+			result: tdocs.slice(0, 1)
+		},
 		'simple value not equal to simple value': {
 			query: {price: {$ne: tdocs[0].price}},
 			result: tdocs.slice(1, 4)
