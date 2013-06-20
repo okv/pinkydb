@@ -35,7 +35,27 @@ describe('query', function() {
 	var tdocsQueries = {
 		'equal to simple value': {
 			query: {price: tdocs[0].price},
-			result: [tdocs[0]]
+			result: tdocs.slice(0, 1)
+		},
+		'not equal to simple value': {
+			query: {price: {$ne: tdocs[0].price}},
+			result: tdocs.slice(1, 4)
+		},
+		'greater then simple value': {
+			query: {price: {$gt: tdocs[1].price}},
+			result: tdocs.slice(2, 4)
+		},
+		'greater or equal to simple value': {
+			query: {price: {$gte: tdocs[1].price}},
+			result: tdocs.slice(1, 4)
+		},
+		'less then simple value': {
+			query: {price: {$lt: tdocs[1].price}},
+			result: tdocs.slice(0, 1)
+		},
+		'less or equal then simple value': {
+			query: {price: {$lte: tdocs[1].price}},
+			result: tdocs.slice(0, 2)
 		},
 		'simple value in array': {
 			query: {price: {$in: tdocs.slice(1, 3).map(function(doc) {
