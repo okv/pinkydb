@@ -6,7 +6,7 @@ var expect = require('expect.js'),
 describe('collection', function() {
 	var client = null, db = null, fruits = null;
 	it('connect to db', function(done) {
-		pinkydb.open({storage:{path: '/tmp'}}, function(err, cl) {
+		pinkydb.open({storage: {path: '/tmp'}}, function(err, cl) {
 			if (err) done(err);
 			client = cl;
 			db = client.db('food'),
@@ -27,6 +27,17 @@ describe('collection', function() {
 		// document with self defined id
 		{_id: 'GRAPE', name: 'grape', price: 13, colors: ['margin', 'green']}
 	];
+
+	var tdocsQueries = {
+		equal: [{
+			name: 'primitive', value: tdocs[0].price, result: tdocs[0]
+		}],
+		in: [{
+			name: 'primitive',
+			value: tdocs.slice(1, 3).map(function(doc) {return doc.price; }),
+			result: tdocs.slice(1, 3)
+		}]
+	};
 
 	describe('insert', function() {
 		it('single document without errors', function(done) {
@@ -123,36 +134,6 @@ describe('collection', function() {
 				expect(err.message).ok();
 				expect(err.message).contain('currently unsupported');
 				done();
-			});
-		});
-	});
-
-	describe('find', function() {
-		describe('equal', function() {
-			it('primitive', function(done) {
-				fruits.find({price: tdocs[0].price}).toArray(function(err, docs) {
-					if (err) done(err);
-					expect(docs).length(1);
-					expect(docs[0]).eql(tdocs[0]);
-					done();
-				});
-			});
-		});
-		describe('in', function() {
-			it('primitive in array', function(done) {
-				var batch = tdocs.slice(1, 3);
-				var prices = batch.map(function(doc) { return doc.price; });
-				fruits.find({price: {$in: prices}}).toArray(function(err, docs) {
-					if (err) done(err);
-					docs.forEach(function(doc) {
-						var fdocs = batch.filter(function(bdoc) {
-							return bdoc._id == doc._id;
-						});
-						expect(fdocs).length(1);
-						expect(fdocs[0]).eql(doc);
-					});
-					done();
-				});
 			});
 		});
 	});
