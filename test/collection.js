@@ -129,10 +129,19 @@ describe('collection', function() {
 
 	describe('remove', function() {
 		var namesToRemove = null;
-		it('find documents before remove', function(done) {
-			namesToRemove = tdocs.slice(0, 2).map(function(doc) {
-				return doc.name;
+
+		it('find names to remove - first two documents', function(done) {
+			fruits.find({}).limit(2).toArray(function(err, docs) {
+				if (err) done(err);
+				expect(docs).length(2);
+				namesToRemove = docs.map(function(doc) {
+					return doc.name;
+				});
+				done();
 			});
+		});
+
+		it('find documents before remove', function(done) {
 			fruits.find({name: {$in: namesToRemove}}).toArray(function(err, docs) {
 				if (err) done(err);
 				expect(docs).eql(tdocs.slice(0, 2));
@@ -140,7 +149,7 @@ describe('collection', function() {
 			});
 		});
 
-		it('remove several documents', function(done) {
+		it('remove documents', function(done) {
 			fruits.remove({name: {$in: namesToRemove}}, done);
 		});
 
@@ -148,6 +157,14 @@ describe('collection', function() {
 			fruits.find({name: {$in: namesToRemove}}).toArray(function(err, docs) {
 				if (err) done(err);
 				expect(docs).length(0);
+				done();
+			});
+		});
+
+		it('expect collection only 2 documents', function(done) {
+			fruits.find().toArray(function(err, docs) {
+				if (err) done(err);
+				expect(docs).eql(tdocs.slice(2, 4));
 				done();
 			});
 		});
