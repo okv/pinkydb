@@ -145,7 +145,11 @@ describe('query', function() {
 			result: tdocs.slice(0, 3)
 		},
 		'$and': {
-			query: {$and: [{price: 5}, {pprices: 3}]},
+			queries: [{
+				$and: [{price: 5}, {pprices: 3}]
+			}, {
+				price: 5, pprices: 3
+			}],
 			result: tdocs.slice(0, 1)
 		},
 		'$and inside $or': {
@@ -154,21 +158,57 @@ describe('query', function() {
 				{$and: [{price: 7}, {pprices: 6}]}
 			]},
 			result: tdocs.slice(0, 2)
+		},
+		'simple value matches to regexp': {
+			queries: [{
+				name: {$regex: /^Appl/i}
+			}, {
+				name: /^Appl/i
+			}],
+			result: tdocs.slice(0, 1)
+		},
+		'array matches to regexp': {
+			queries: [{
+				pprices: {$regex: /^3$/}
+			}, {
+				pprices: /^3$/
+			}],
+			result: tdocs.slice(0, 1)
 		}
 	};
 
 	describe('find where', function() {
 		// generate test for each query from `tdocsQueries`
 		Object.keys(tdocsQueries).forEach(function(queryName) {
-			it(queryName, function(done) {
-				// query defition
-				var queryDef = tdocsQueries[queryName];
-				fruits.find(queryDef.query).toArray(function(err, docs) {
-					if (err) done(err);
-					expect(docs).eql(queryDef.result);
-					done();
+			// queryDef - query defition
+			var queryDef = tdocsQueries[queryName];
+			// when single test query specified
+			if (queryDef.query) {
+				it(queryName, function(done) {
+					fruits.find(queryDef.query).toArray(function(err, docs) {
+						if (err) done(err);
+						expect(docs).eql(queryDef.result);
+						done();
+					});
 				});
-			});
+			} else if (queryDef.queries) {
+			// when several test queries specified (all should return same result)
+				describe(queryName, function() {
+					queryDef.queries.forEach(function(query, index) {
+						it('query ' + index, function(done) {
+							fruits.find(query).toArray(function(err, docs) {
+								if (err) done(err);
+								expect(docs).eql(queryDef.result);
+								done();
+							});
+						});
+					});
+				});
+			} else {
+				throw new Error(
+					'`query` or `queries` should be specified for query defition'
+				);
+			}
 		});
 	});
 });
