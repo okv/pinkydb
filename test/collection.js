@@ -28,17 +28,6 @@ describe('collection', function() {
 		{_id: 'GRAPE', name: 'grape', price: 13, colors: ['margin', 'green']}
 	];
 
-	var tdocsQueries = {
-		equal: [{
-			name: 'primitive', value: tdocs[0].price, result: tdocs[0]
-		}],
-		in: [{
-			name: 'primitive',
-			value: tdocs.slice(1, 3).map(function(doc) {return doc.price; }),
-			result: tdocs.slice(1, 3)
-		}]
-	};
-
 	describe('insert', function() {
 		it('single document without errors', function(done) {
 			fruits.insert(tdocs[0], done);
