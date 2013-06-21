@@ -128,15 +128,19 @@ describe('collection', function() {
 	});
 
 	describe('remove', function() {
-		var namesToRemove = null;
+		var namesToRemove = null,
+			docsToRemove = null,
+			collectionDocsAfterRemove = null;
 
-		it('find names to remove - first two documents', function(done) {
-			fruits.find({}).limit(2).toArray(function(err, docs) {
+		it('find names to remove', function(done) {
+			fruits.find({}).skip(1).limit(2).toArray(function(err, docs) {
 				if (err) done(err);
 				expect(docs).length(2);
-				namesToRemove = docs.map(function(doc) {
+				docsToRemove = tdocs.slice(1, 3);
+				namesToRemove = docsToRemove.map(function(doc) {
 					return doc.name;
 				});
+				collectionDocsAfterRemove = [tdocs[0], tdocs[3]];
 				done();
 			});
 		});
@@ -144,7 +148,7 @@ describe('collection', function() {
 		it('find documents before remove', function(done) {
 			fruits.find({name: {$in: namesToRemove}}).toArray(function(err, docs) {
 				if (err) done(err);
-				expect(docs).eql(tdocs.slice(0, 2));
+				expect(docs).eql(docsToRemove);
 				done();
 			});
 		});
@@ -164,8 +168,21 @@ describe('collection', function() {
 		it('expect collection only 2 documents', function(done) {
 			fruits.find().toArray(function(err, docs) {
 				if (err) done(err);
-				expect(docs).eql(tdocs.slice(2, 4));
+				expect(docs).eql(collectionDocsAfterRemove);
 				done();
+			});
+		});
+
+		// simple current storage engine test
+		it('new connection should load only 2 document', function(done) {
+			pinkydb.open({storage: {path: '/tmp'}}, function(err, client) {
+				if (err) done(err);
+				var fruits = client.db('food').collection('fruits');
+				fruits.find().toArray(function(err, docs) {
+					if (err) done(err);
+					expect(docs).eql(collectionDocsAfterRemove);
+					done();
+				});
 			});
 		});
 	});
