@@ -126,4 +126,30 @@ describe('collection', function() {
 			});
 		});
 	});
+
+	describe('remove', function() {
+		var namesToRemove = null;
+		it('find documents before remove', function(done) {
+			namesToRemove = tdocs.slice(0, 2).map(function(doc) {
+				return doc.name;
+			});
+			fruits.find({name: {$in: namesToRemove}}).toArray(function(err, docs) {
+				if (err) done(err);
+				expect(docs).eql(tdocs.slice(0, 2));
+				done();
+			});
+		});
+
+		it('remove several documents', function(done) {
+			fruits.remove({name: {$in: namesToRemove}}, done);
+		});
+
+		it('expect documents can`t be find after remove', function(done) {
+			fruits.find({name: {$in: namesToRemove}}).toArray(function(err, docs) {
+				if (err) done(err);
+				expect(docs).length(0);
+				done();
+			});
+		});
+	});
 });
