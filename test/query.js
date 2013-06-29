@@ -144,6 +144,10 @@ describe('query', function() {
 			})}},
 			result: tdocs.slice(3, 4)
 		},
+		'array not in array': {
+			query: {pprices: {$nin: [4, 5]}},
+			result: tdocs.slice(1, 4)
+		},
 		'$or': {
 			query: {$or: [{price: 5}, {pprices: {$gt: 4, $lt: 9}}]},
 			result: tdocs.slice(0, 3)
