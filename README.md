@@ -10,7 +10,9 @@ work in progress...
 * dot notation
 * array in/nin array
 * in/nin requires an array
-* better cursors (clone there, test erors)
+* better cursors (clone at cursor, test erors)
 * sort
 * using mhook
 * docs
+* benchmarks
+* mongo copability tests (possibly)
