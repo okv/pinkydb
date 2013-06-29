@@ -174,6 +174,12 @@ describe('query', function() {
 				pprices: /^3$/
 			}],
 			result: tdocs.slice(0, 1)
+		},
+		'function instead of query': {
+			query: function(doc) {
+				return ~['apple', 'pear'].indexOf(doc.name);
+			},
+			result: tdocs.slice(0, 2)
 		}
 	};
 
