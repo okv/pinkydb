@@ -6,10 +6,7 @@ work in progress...
 
 ## TODO (before release)
 
-* `where` support
 * dot notation
-* array in/nin array
-* in/nin requires an array
 * better cursors (clone at cursor, test erors)
 * sort
 * using mhook
