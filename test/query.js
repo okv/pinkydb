@@ -134,6 +134,10 @@ describe('query', function() {
 			})}},
 			result: tdocs.slice(1, 3)
 		},
+		'simple value in simple value (expect error)': {
+			query: {price: {$in: 3}},
+			result: new Error('$in/$nin requires an array')
+		},
 		'array in array': {
 			query: {pprices: {$in: [4, 5]}},
 			result: tdocs.slice(0, 1)
@@ -143,6 +147,10 @@ describe('query', function() {
 				return doc.price;
 			})}},
 			result: tdocs.slice(3, 4)
+		},
+		'simple value not in simple value (expect error)': {
+			query: {price: {$nin: 3}},
+			result: new Error('$in/$nin requires an array')
 		},
 		'array not in array': {
 			query: {pprices: {$nin: [4, 5]}},
@@ -200,9 +208,7 @@ describe('query', function() {
 			if (queryDef.query) {
 				it(queryName, function(done) {
 					fruits.find(queryDef.query).toArray(function(err, docs) {
-						if (err) done(err);
-						expect(docs).eql(queryDef.result);
-						done();
+						processResult(err, docs, done);
 					});
 				});
 			} else if (queryDef.queries) {
@@ -211,9 +217,7 @@ describe('query', function() {
 					queryDef.queries.forEach(function(query, index) {
 						it('query ' + index, function(done) {
 							fruits.find(query).toArray(function(err, docs) {
-								if (err) done(err);
-								expect(docs).eql(queryDef.result);
-								done();
+								processResult(err, docs, done);
 							});
 						});
 					});
@@ -222,6 +226,19 @@ describe('query', function() {
 				throw new Error(
 					'`query` or `queries` should be specified for query defition'
 				);
+			}
+
+			function processResult(err, docs, done) {
+				if (err) {
+					if (queryDef.result instanceof Error) {
+						expect(queryDef.result.message).equal(err.message);
+					} else {
+						done(err);
+					}
+				} else {
+					expect(docs).eql(queryDef.result);
+				}
+				done();
 			}
 		});
 	});
