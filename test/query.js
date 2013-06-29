@@ -142,6 +142,10 @@ describe('query', function() {
 			query: {pprices: {$in: [4, 5]}},
 			result: tdocs.slice(0, 1)
 		},
+		'object in array of objects': {
+			query: {add: {$in: [tdocs[2].add]}},
+			result: tdocs.slice(2, 3)
+		},
 		'simple value not in array': {
 			query: {price: {$nin: tdocs.slice(0, 3).map(function(doc) {
 				return doc.price;
