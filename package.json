@@ -11,7 +11,9 @@
 		"store", "storage", "db", "database", "mongo", "mongodb", "in-process", "sqlight"
 	],
 	"scripts": {
-		"test": "mocha test --reporter spec --bail --async-only"
+		"test": "mocha test --reporter spec --bail --async-only",
+		"benchmark": "mocha benchmark/*.bench.js --reporter spec --bail --async-only --slow 1",
+		"gendata": "node benchmark/gendata.js"
 	},
 	"dependencies": {
 	},
