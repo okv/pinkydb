@@ -92,6 +92,18 @@ describe('query', function() {
 			query: {pprices: {$ne: 3}},
 			result: tdocs.slice(1, 4)
 		},
+		'object not equal to object': {
+			query: {add: {$ne: {colors: ['red', 'green']}}},
+			result: tdocs.slice(1, 4)
+		},
+		'string not equal to regex': {
+			query: {
+				name: {$ne: /^Appl/i}
+			},
+			result: tdocs.slice(1, 4),
+			// mongodb 2.2.3 doesn`t support this
+			skip: baseTest.um
+		},
 		'simple value greater then simple value': {
 			query: {price: {$gt: tdocs[1].price}},
 			result: tdocs.slice(2, 4)
@@ -201,7 +213,7 @@ describe('query', function() {
 				return ~['apple', 'pear'].indexOf(this.name);
 			},
 			result: tdocs.slice(0, 2),
-			// mongodb native 1.3.10 doesn`t support function instead of query
+			// mongodb 2.2.3/driver 1.3.10 doesn`t support function instead of query
 			skip: baseTest.um
 		}
 	};
