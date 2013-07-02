@@ -64,7 +64,7 @@ describe('collection', function() {
 				expect(err).ok();
 				expect(err).a(Error);
 				expect(err.message).ok();
-				expect(err.message).contain('violation');
+				expect(err.message).contain('duplicate key error');
 				expect(err.message).contain(tdocs[0]._id);
 				done();
 			});
@@ -106,13 +106,14 @@ describe('collection', function() {
 				expect(err).ok();
 				expect(err).a(Error);
 				expect(err.message).ok();
-				expect(err.message).contain('change `_id`');
+				expect(err.message).contain('cannot change _id');
 				done();
 			});
 			tdocs[0]._id--;
 		});
 
-		it('expect that multi update unsupported', function(done) {
+		(baseTest.um ? it.skip : it)
+		('expect that multi update unsupported', function(done) {
 			fruits.update({}, tdocs[0], {multi: true}, function(err) {
 				expect(err).ok();
 				expect(err).a(Error);
@@ -171,7 +172,7 @@ describe('collection', function() {
 
 		// simple current storage engine test
 		it('new connection should load only 2 document', function(done) {
-			baseTest.connectToDb({storage: {path: '/tmp'}}, function(err, client) {
+			baseTest.connectToDb(function(err, client) {
 				if (err) done(err);
 				var fruits = client.db('food').collection('fruits');
 				fruits.find().toArray(function(err, docs) {

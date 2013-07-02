@@ -132,7 +132,9 @@ describe('query', function() {
 		},
 		'simple value in simple value (expect error)': {
 			query: {price: {$in: 3}},
-			result: new Error('$in/$nin requires an array')
+			result: new Error(
+				baseTest.um ? 'invalid query' : '$in/$nin requires an array'
+			)
 		},
 		'array in array': {
 			query: {pprices: {$in: [4, 5]}},
@@ -150,7 +152,9 @@ describe('query', function() {
 		},
 		'simple value not in simple value (expect error)': {
 			query: {price: {$nin: 3}},
-			result: new Error('$in/$nin requires an array')
+			result: new Error(
+				baseTest.um ? '$nin needs an array' : '$in/$nin requires an array'
+			)
 		},
 		'array not in array': {
 			query: {pprices: {$nin: [4, 5]}},
@@ -189,13 +193,15 @@ describe('query', function() {
 			}, {
 				pprices: /^3$/
 			}],
-			result: tdocs.slice(0, 1)
+			result: tdocs.slice(0, 1),
+			skip: baseTest.um
 		},
 		'function instead of query': {
 			query: function(doc) {
 				return ~['apple', 'pear'].indexOf(doc.name);
 			},
-			result: tdocs.slice(0, 2)
+			result: tdocs.slice(0, 2),
+			skip: baseTest.um
 		}
 	};
 
@@ -206,7 +212,7 @@ describe('query', function() {
 			var queryDef = tdocsQueries[queryName];
 			// when single test query specified
 			if (queryDef.query) {
-				it(queryName, function(done) {
+				(queryDef.skip ? it.skip: it)(queryName, function(done) {
 					fruits.find(queryDef.query).toArray(function(err, docs) {
 						processResult(err, docs, done);
 					});
@@ -215,7 +221,7 @@ describe('query', function() {
 			// when several test queries specified (all should return same result)
 				describe(queryName, function() {
 					queryDef.queries.forEach(function(query, index) {
-						it('query ' + index, function(done) {
+						(queryDef.skip ? it.skip: it)('query ' + index, function(done) {
 							fruits.find(query).toArray(function(err, docs) {
 								processResult(err, docs, done);
 							});
