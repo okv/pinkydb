@@ -1,18 +1,14 @@
 'use strict';
 
 var expect = require('expect.js'),
-	pinkydb = require('../lib');
+	baseTest = require('./baseTest');
 
 describe('query', function() {
-	var client = null, db = null, fruits = null;
-	it('connect to db', function(done) {
-		pinkydb.open({storage: {path: '/tmp'}}, function(err, cl) {
-			if (err) done(err);
-			client = cl;
-			db = client.db('food'),
-			fruits = db.collection('fruits');
-			done();
-		});
+	var fruits = null;
+
+	it('get pointers to collections', function(done) {
+		fruits = baseTest.collections.fruits;
+		done();
 	});
 
 	it('clean collection', function(done) {

@@ -1,18 +1,14 @@
 'use strict';
 
 var expect = require('expect.js'),
-	pinkydb = require('../lib');
+	baseTest = require('./baseTest');
 
 describe('collection', function() {
-	var client = null, db = null, fruits = null;
-	it('connect to db', function(done) {
-		pinkydb.open({storage: {path: '/tmp'}}, function(err, cl) {
-			if (err) done(err);
-			client = cl;
-			db = client.db('food'),
-			fruits = db.collection('fruits');
-			done();
-		});
+	var fruits = null;
+
+	it('get pointers to collections', function(done) {
+		fruits = baseTest.collections.fruits;
+		done();
 	});
 
 	it('clean collection', function(done) {
@@ -175,7 +171,7 @@ describe('collection', function() {
 
 		// simple current storage engine test
 		it('new connection should load only 2 document', function(done) {
-			pinkydb.open({storage: {path: '/tmp'}}, function(err, client) {
+			baseTest.connectToDb({storage: {path: '/tmp'}}, function(err, client) {
 				if (err) done(err);
 				var fruits = client.db('food').collection('fruits');
 				fruits.find().toArray(function(err, docs) {
