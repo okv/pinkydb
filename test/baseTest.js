@@ -1,5 +1,8 @@
 'use strict';
 
+var expect = require('expect.js'),
+	utils = require('../lib/utils');
+
 // use mongodb instead of pinkydb
 var um = process.env.NODE_USE_MONGODB;
 exports.um = um;
@@ -22,10 +25,11 @@ describe('bootstrap', function() {
 		it('to ' + (um ? 'mongodb' : 'pinkydb'), function(done) {
 			exports.connectToDb(function(err, client, driver) {
 				if (err) done(err);
-				var db = client.db('food');
+				var db = client.db('pinkydbTest');
 				if (!um) {
 					exports.collections = {
-						fruits: db.collection('fruits')
+						fruits: db.collection('fruits'),
+						users: db.collection('users')
 					};
 				} else {
 					var Collection = driver.Collection;
@@ -36,7 +40,8 @@ describe('bootstrap', function() {
 						};
 					};
 					exports.collections = {
-						fruits: new Collection(db, 'fruits', new SeqPkFactory())
+						fruits: new Collection(db, 'fruits', new SeqPkFactory()),
+						users: new Collection(db, 'users', new SeqPkFactory())
 					};
 				}
 				done();
@@ -46,3 +51,34 @@ describe('bootstrap', function() {
 	});
 });
 
+
+/**
+ * It's monkey patch to refine and extend expect.js lib
+ */
+
+var expectProto = expect.Assertion.prototype;
+
+/**
+ * Compare arrays as sets (compare arrays regardless of order of their items)
+ */
+expectProto.equalSet = function(expected) {
+	var actual = this.obj;
+	if (!actual || !expected) {
+		throw new Error('actual or expected not exists');
+	}
+	this.assert(
+		(actual.length == expected.length) && actual.every(function(actual) {
+			return expected.some(function(expected) {
+				return utils.isEqual(actual, expected);
+			});
+		}),
+		function() {
+			return 'expected ' + JSON.stringify(actual) + ' is equal set to ' +
+				JSON.stringify(expected);
+		},
+		function() {
+			return 'expected ' + JSON.stringify(actual) + ' is not equal set to ' +
+				JSON.stringify(expected);
+		});
+	return this;
+};

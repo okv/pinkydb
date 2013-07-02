@@ -165,7 +165,7 @@ describe('collection', function() {
 		it('expect collection only 2 documents', function(done) {
 			fruits.find().toArray(function(err, docs) {
 				if (err) done(err);
-				expect(docs).eql(collectionDocsAfterRemove);
+				expect(docs).equalSet(collectionDocsAfterRemove);
 				done();
 			});
 		});
@@ -174,10 +174,10 @@ describe('collection', function() {
 		it('new connection should load only 2 document', function(done) {
 			baseTest.connectToDb(function(err, client) {
 				if (err) done(err);
-				var fruits = client.db('food').collection('fruits');
+				var fruits = client.db('pinkydbTest').collection('fruits');
 				fruits.find().toArray(function(err, docs) {
 					if (err) done(err);
-					expect(docs).eql(collectionDocsAfterRemove);
+					expect(docs).equalSet(collectionDocsAfterRemove);
 					done();
 				});
 			});
