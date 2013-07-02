@@ -61,6 +61,8 @@ describe('query', function() {
 				country: 'USA', ratio: 9
 			}]
 		}
+	}, {
+		//this document will have only `_id` field
 	}];
 
 	it('insert test documents', function(done) {
@@ -86,21 +88,21 @@ describe('query', function() {
 		},
 		'simple value not equal to simple value': {
 			query: {price: {$ne: tdocs[0].price}},
-			result: tdocs.slice(1, 4)
+			result: tdocs.slice(1)
 		},
 		'array not equal to simple value': {
 			query: {pprices: {$ne: 3}},
-			result: tdocs.slice(1, 4)
+			result: tdocs.slice(1)
 		},
 		'object not equal to object': {
 			query: {add: {$ne: {colors: ['red', 'green']}}},
-			result: tdocs.slice(1, 4)
+			result: tdocs.slice(1)
 		},
 		'string not equal to regex': {
 			query: {
 				name: {$ne: /^Appl/i}
 			},
-			result: tdocs.slice(1, 4),
+			result: tdocs.slice(1),
 			// mongodb 2.2.3 doesn`t support this
 			skip: baseTest.um
 		},
@@ -160,7 +162,7 @@ describe('query', function() {
 			query: {price: {$nin: tdocs.slice(0, 3).map(function(doc) {
 				return doc.price;
 			})}},
-			result: tdocs.slice(3, 4)
+			result: tdocs.slice(3, 5)
 		},
 		'simple value not in simple value (expect error)': {
 			query: {price: {$nin: 3}},
@@ -170,7 +172,7 @@ describe('query', function() {
 		},
 		'array not in array': {
 			query: {pprices: {$nin: [4, 5]}},
-			result: tdocs.slice(1, 4)
+			result: tdocs.slice(1)
 		},
 		'$or': {
 			query: {$or: [{price: 5}, {pprices: {$gt: 4, $lt: 9}}]},
