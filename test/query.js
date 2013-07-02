@@ -197,10 +197,11 @@ describe('query', function() {
 			skip: baseTest.um
 		},
 		'function instead of query': {
-			query: function(doc) {
-				return ~['apple', 'pear'].indexOf(doc.name);
+			query: function() {
+				return ~['apple', 'pear'].indexOf(this.name);
 			},
 			result: tdocs.slice(0, 2),
+			// mongodb native 1.3.10 doesn`t support function instead of query
 			skip: baseTest.um
 		}
 	};
