@@ -35,7 +35,7 @@ describe('collection', function() {
 		});
 
 		it('by birtday', function(done) {
-			users.find({birtday: {
+			users.find({birthday: {
 				$gt: new Date('October 01, 1990 00:00:00').getTime(),
 				$lt: new Date('October 01, 2000 00:00:00').getTime()
 			}}).toArray(done);
