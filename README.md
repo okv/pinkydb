@@ -6,10 +6,11 @@ work in progress...
 
 ## TODO (before release)
 
-* dot notation
+* return freezed objects instead of cloned
 * better cursors (clone at cursor, test erors)
-* sort
-* using mhook
+* at lib/query do more at compile time instead of runtime
+* dot notation
+* using mhook or not using hooks at all
+* browser support
 * docs
-* benchmarks
-* mongo copability tests (possibly)
+* sort
