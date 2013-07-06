@@ -183,4 +183,41 @@ describe('collection', function() {
 			});
 		});
 	});
+
+	describe('find', function() {
+		it('returns cloned document', function(done) {
+			var prevPrice = tdocs[0].price,
+				prevColor = tdocs[0].colors.pop();
+			tdocs[0].price == 55;
+			fruits.find({_id: tdocs[0]._id}).toArray(function(err, docs) {
+				if (err) throw err;
+				tdocs[0].price == prevPrice;
+				tdocs[0].colors.push(prevColor);
+				expect(docs).an(Array);
+				expect(docs).length(1);
+				expect(docs[0]).eql(tdocs[0]);
+				done();
+			});
+		});
+
+		it('with emty results returns empty array', function(done) {
+			fruits.find({price: 'free'}).toArray(function(err, docs) {
+				if (err) throw err;
+				expect(docs).an(Array);
+				expect(docs).length(0);
+				done();
+			});
+		});
+
+	});
+
+	describe('findOne', function() {
+		it('emty results returns null', function(done) {
+			fruits.findOne({price: 'free'}, function(err, doc) {
+				if (err) throw err;
+				expect(doc).eql(null);
+				done();
+			});
+		});
+	});
 });
