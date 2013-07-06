@@ -30,6 +30,10 @@ describe('collection', function() {
 	});
 
 	describe('find', function() {
+		it('all', function(done) {
+			users.find().toArray(done);
+		});
+
 		it('by occupation', function(done) {
 			users.find({occupation: 'Gaming Manager'}).toArray(done);
 		});
