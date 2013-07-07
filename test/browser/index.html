@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>pinkdb test</title>
+		<link rel="stylesheet" href="css/mocha.css" />
+	</head>
+	<body>
+		<div id="mocha"></div>
+		<script src="../../bundle/browser/storage.memory.js"></script>
+		<script src="../../bundle/browser/pinkydb.js"></script>
+		<script src="js/expect.js"></script>
+		<script src="js/mocha.js"></script>
+		<script>mocha.setup('bdd');</script>
+		<script src="baseTest.js"></script>
+		<script src="collection.js"></script>
+		<script src="query.js"></script>
+		<script>
+			mocha.bail();
+			mocha.run();
+		</script>
+	</body>
+</html>
