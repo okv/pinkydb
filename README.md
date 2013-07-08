@@ -14,6 +14,7 @@ work in progress...
 * better browser support (add version, drop unused code from buld)
 * docs
 * make storage loadCollection async
+* make Collection api compatible with mongodb native (include cuntructor)
 * sort
 * serialize async
 * add to file on insert/update
