@@ -434,7 +434,7 @@ Collection.prototype._getDocs = function() {
 
 exports.Collection = Collection;
 
-},{"util":6,"./query":7,"./cursor":8,"./utils":2,"./hook":9}],6:[function(require,module,exports){
+},{"util":6,"./query":7,"./utils":2,"./hook":8,"./cursor":9}],6:[function(require,module,exports){
 var events = require('events');
 
 exports.isArray = isArray;
@@ -1027,37 +1027,7 @@ EventEmitter.prototype.listeners = function(type) {
 };
 
 })(require("__browserify_process"))
-},{"__browserify_process":11}],8:[function(require,module,exports){
-'use strict';
-
-var utils = require('./utils');
-
-function Cursor(err, docs) {
-	this._err = err;
-	this._docs = docs;
-}
-
-Cursor.prototype.toArray = function(callback) {
-	callback = callback || utils.noop;
-	callback(this._err, this._docs);
-};
-
-Cursor.prototype.skip = function(n) {
-	return new Cursor(this._err, this._docs.slice(n));
-};
-
-Cursor.prototype.limit = function(n) {
-	return new Cursor(this._err, this._docs.slice(0, n));
-};
-
-Cursor.prototype.count = function(callback) {
-	callback = callback || utils.noop;
-	callback(this._err, this._docs.length);
-};
-
-exports.Cursor = Cursor;
-
-},{"./utils":2}],7:[function(require,module,exports){
+},{"__browserify_process":11}],7:[function(require,module,exports){
 'use strict';
 
 var utils = require('./utils');
@@ -1237,7 +1207,7 @@ function compile(query) {
 
 exports.compile = compile;
 
-},{"./utils":2}],9:[function(require,module,exports){
+},{"./utils":2}],8:[function(require,module,exports){
 'use strict';
 
 var utils = require('./utils');
@@ -1283,5 +1253,35 @@ Hook.prototype.trigger = function(action, params, callback) {
 
 exports.Hook = Hook;
 
+},{"./utils":2}],9:[function(require,module,exports){
+'use strict';
+
+var utils = require('./utils');
+
+function Cursor(err, docs) {
+	this._err = err;
+	this._docs = docs;
+}
+
+Cursor.prototype.toArray = function(callback) {
+	callback = callback || utils.noop;
+	callback(this._err, this._docs);
+};
+
+Cursor.prototype.skip = function(n) {
+	return new Cursor(this._err, this._docs.slice(n));
+};
+
+Cursor.prototype.limit = function(n) {
+	return new Cursor(this._err, this._docs.slice(0, n));
+};
+
+Cursor.prototype.count = function(callback) {
+	callback = callback || utils.noop;
+	callback(this._err, this._docs.length);
+};
+
+exports.Cursor = Cursor;
+
 },{"./utils":2}]},{},[])
-;
+;pinkydb=require('pinkydb');
