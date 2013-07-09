@@ -15,7 +15,7 @@
 		"benchmark": "mocha benchmark/*.bench.js --reporter spec --bail --async-only --slow 1",
 		"gendata": "node benchmark/gendata.js",
 		"browserifytests": "tail -n +5 test/collection.js > test/browser/collection.js && tail -n +5 test/query.js > test/browser/query.js",
-		"browserify": "node_modules/browserify/bin/cmd.js -r ./lib/index > bundle/browser/pinkydb.js && cd lib/storage && ../../node_modules/browserify/bin/cmd.js -r ./memory > ../../bundle/browser/storage.memory.js"
+		"browserify": "node_modules/browserify/bin/cmd.js -r ./lib/index:pinkydb > bundle/browser/pinkydb.js && cd lib/storage && ../../node_modules/browserify/bin/cmd.js -r ./memory > ../../bundle/browser/storage.memory.js"
 	},
 	"dependencies": {
 	},

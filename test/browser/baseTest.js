@@ -1,4 +1,4 @@
-var pinkydb = require('./lib/index');
+var pinkydb = require('pinkydb');
 var utils = pinkydb.utils;
 
 baseTest = {};
