@@ -185,63 +185,43 @@ exports.freeze = function(obj, deep) {
 'use strict';
 
 var utils = require('./utils'),
-	Db = require('./db').Db;
+	Db = require('./db').Db,
+	createStorage = require('./storage').createStorage;
 
 function Client() {
 	this.dbs = {};
 }
 
 Client.prototype.open = function(params, callback) {
+	var self = this;
 	callback = callback || utils.noop;
-	this.params = params;
-	callback(null, this);
+	params = params || {};
+	params.storage = params.storage || {};
+	params.storage.type = params.storage.type || 'fs';
+	this.storage = createStorage(params.storage);
+	// load all databases
+	this.storage.getDbs(function(err, dbs) {
+		if (err) {callback(err); return;}
+		dbs.forEach(function(name) {
+			var db = self.db(name);
+			db.load(function(err) {
+				callback(err, self);
+			});
+		});
+		if (!dbs.length) callback(null, self);
+	});
 };
 
 Client.prototype.db = function(name) {
 	if (name in this.dbs === false) {
-		this.dbs[name] = new Db(name, this.params);
+		this.dbs[name] = new Db(name, this.storage);
 	}
 	return this.dbs[name];
 };
 
 exports.Client = Client;
 
-},{"./utils":2,"./db":3}],3:[function(require,module,exports){
-'use strict';
-
-var Collection = require('./collection').Collection,
-	createStorage = require('./storage').createStorage;
-
-function Db(name, params) {
-	params = params || {};
-	params.storage = params.storage || {};
-	params.storage.type = params.storage.type || 'fs';
-	this.name = name;
-	this.collections = {};
-	this.storage = createStorage(params.storage);
-}
-
-Db.prototype.collection = function(name) {
-	var self = this;
-	if (name in self.collections === false) {
-		self.collections[name] = new Collection(name);
-		self.storage.loadCollection(self, self.collections[name]);
-		self.collections[name].on('afterInsert', function(params, done) {
-			self.storage.saveCollection(self, self.collections[name], done);
-		});
-		self.collections[name].on('afterUpdate', function(params, done) {
-			self.storage.saveCollection(self, self.collections[name], done);
-		});
-		self.collections[name].on('afterRemove', function(params, done) {
-			self.storage.saveCollection(self, self.collections[name], done);
-		});
-	}
-	return this.collections[name];
-};
-
-exports.Db = Db;
-
-},{"./collection":4,"./storage":5}],5:[function(require,module,exports){
+},{"./db":3,"./utils":2,"./storage":4}],4:[function(require,module,exports){
 'use strict';
 
 exports.createStorage = function(params) {
@@ -255,7 +235,53 @@ exports.createStorage = function(params) {
 	}
 };
 
-},{}],4:[function(require,module,exports){
+},{}],3:[function(require,module,exports){
+'use strict';
+
+var Collection = require('./collection').Collection;
+
+function Db(name, storage) {
+	this.name = name;
+	this.storage = storage;
+	this.collections = {};
+}
+
+Db.prototype.load = function(callback) {
+	var self = this;
+	self.storage.getCollections(self.name, function(err, collections) {
+		if (err) {callback(err); return;}
+		collections.forEach(function(name) {
+			var collection = self.collection(name),
+				loadedCollections = 0;
+			self.storage.readDocs(self.name, name, function(err, docs) {
+				if (err) {callback(err);}
+				collection._setDocs(docs);
+				loadedCollections++;
+				if (loadedCollections == collections.length) callback();
+			});
+		});
+		if (!collections.length) callback();
+	});
+};
+
+Db.prototype.collection = function(name) {
+	var self = this;
+	if (name in self.collections === false) {
+		self.collections[name] = new Collection(self, name);
+		['afterInsert', 'afterUpdate', 'afterRemove'].forEach(function(action) {
+			self.collections[name].on(action, function(params, done) {
+				self.storage.writeDocs(
+					self.name, name, self.collections[name]._getDocs(), done
+				);
+			});
+		});
+	}
+	return this.collections[name];
+};
+
+exports.Db = Db;
+
+},{"./collection":5}],5:[function(require,module,exports){
 'use strict';
 
 var compileQuery = require('./query').compile,
@@ -270,8 +296,9 @@ var compileQuery = require('./query').compile,
  * Notice: utils.clone used for unlink documentss from database
  */
 
-function Collection(name) {
+function Collection(db, name) {
 	Hook.apply(this);
+	this.db = db;
 	this.name = name;
 	this._idSeq = 0;
 	this._indexes = {_id: {}};
@@ -387,9 +414,27 @@ Collection.prototype.remove = function(query, callback) {
 	});
 };
 
+Collection.prototype._setDocs = function(docs) {
+	var self = this;
+	// tranform documents to hash by `_id` and set to collection
+	docs.forEach(function(doc) {
+		self._indexes._id[doc._id] = doc;
+		if (doc._id > self._idSeq) self._idSeq = doc._id;
+	});
+};
+
+Collection.prototype._getDocs = function() {
+	// tranform documents to array before store them
+	var docs = [];
+	for (var _id in this._indexes._id) {
+		docs.push(this._indexes._id[_id]);
+	}
+	return docs;
+};
+
 exports.Collection = Collection;
 
-},{"util":6,"./query":7,"./hook":8,"./cursor":9,"./utils":2}],6:[function(require,module,exports){
+},{"util":6,"./query":7,"./utils":2,"./cursor":8,"./hook":9}],6:[function(require,module,exports){
 var events = require('events');
 
 exports.isArray = isArray;
@@ -742,7 +787,263 @@ exports.format = function(f) {
   return str;
 };
 
-},{"events":10}],11:[function(require,module,exports){
+},{"events":10}],7:[function(require,module,exports){
+'use strict';
+
+var utils = require('./utils');
+
+/**
+ * Common notice:
+ * av - actual value
+ * ev - expected value
+ * compile time - at this phase we translate query to js source code
+ * run time - phase when we execute generated source code
+ * all functions prefixed with `gen` (e.g. genQuery) executed at compile time
+ */
+
+/**
+ * Generate js source code for query
+ * @param {Object} query Complex query e.g. {a: 1, {$or: [{b: 'test', c: 2}]}}
+ * @returns {String}
+ */
+function genQuery(query) {
+	var keys = Object.keys(query);
+	if (keys.length == 0) {
+		return 'true';
+	} else if (keys.length == 1) {
+		var key = Object.keys(query)[0];
+		return genExpr(key, query[key]);
+	} else {
+		return '(' + keys.map(function(key) {
+			return genExpr(key, query[key]);
+		}).join(' && ') + ')';
+	}
+
+	/**
+	 * Generate js source code for expression
+	 * @param {String} field e.g. `a`
+	 * @param {Any} ev expected `field` value
+	 * @returns {String}
+	 */
+	function genExpr(field, ev) {
+		if (isOperator(field)) {
+			return genCondition(field, ev);
+		} else {
+			if (utils.isObject(ev) && isConditionObject(ev) && !utils.isRegExp(ev)) {
+				return genComparations(field, ev);
+			} else {
+				return genComparation('$eq', field, ev);
+			}
+		}
+
+		function isOperator(key) {
+			return /^\$/.test(key);
+		}
+
+		function isConditionObject(obj) {
+			return Object.keys(obj).every(function(key) {
+				return isOperator(key);
+			});
+		}
+
+		function genComparation(operator, field, ev) {
+			if (operator in comparisonOperators === false) {
+				throw new Error('Unknown operator `' + operator + '`');
+			}
+			ev = utils.isRegExp(ev) ? ev : JSON.stringify(ev);
+			return 'compare(this, "' + field + '", "' + operator + '", ' + ev + ')';
+		}
+
+		function genComparations(field, ev) {
+			return '(' + Object.keys(ev).map(function(operator) {
+				return genComparation(operator, field, ev[operator]);
+			}).join(' && ') + ')';
+		}
+	}
+}
+
+
+/**
+ * Generate js source code for query and conditional `operator` (see
+ * description bellow)
+ */
+var genCondition = (function() {
+	var conditionOperators = {};
+	conditionOperators.$or = function(arr) {
+		return arrCondition(arr, '||');
+	};
+	conditionOperators.$and = function(arr) {
+		return arrCondition(arr, '&&');
+	};
+
+	function arrCondition(arr, sep) {
+		return '(' + arr.map(function(val) {
+			return genQuery(val);
+		}).join(' ' + sep + ' ') + ')';
+	}
+
+	/**
+	 * Generate js source code for `query` using `operator`
+	 * @param {String} operator Logical operator e.g. `$or`
+	 * @param {Array} query Some query e.g. [{a: 1}, {b: 2}]
+	 */
+	return function (operator, query) {
+		return conditionOperators[operator](query);
+	};
+})();
+
+
+/**
+ * Comparison operators
+ */
+var comparisonOperators = {};
+comparisonOperators.$eq = function(av, ev) {
+	if (!utils.isRegExp(ev) && utils.isObject(ev) && utils.isObject(av)) {
+		return utils.isEqual(av, ev);
+	} else if (utils.isRegExp(ev)) {
+		return comparisonOperators.$regex(av, ev);
+	} else {
+		return av == ev;
+	}
+};
+comparisonOperators.$ne = function(av, ev) {
+	return !comparisonOperators.$eq(av, ev);
+};
+comparisonOperators.$gt = function(av, ev) { return av > ev; };
+comparisonOperators.$gte = function(av, ev) { return av >= ev; };
+comparisonOperators.$lt = function(av, ev) { return av < ev; };
+comparisonOperators.$lte = function(av, ev) { return av <= ev; };
+comparisonOperators.$in = function(av, ev) {
+	if (ev && utils.isArray(ev)) {
+		if (av && utils.isArray(av)) {
+			return ev.some(function(ev) {
+				return ~av.indexOf(ev);
+			});
+		} else {
+			return ev.some(function(ev) {
+				return comparisonOperators.$eq(av, ev);
+			});
+		}
+	} else {
+		throw new Error('$in/$nin requires an array');
+	}
+};
+comparisonOperators.$nin = function(av, ev) {
+	return !comparisonOperators.$in(av, ev);
+};
+comparisonOperators.$regex = function(av, ev) {
+	if (!utils.isRegExp(ev)) throw new Error(
+		'$regex requires instance of RegExp'
+	);
+	return ev.test(av);
+};
+
+
+/**
+ * Compare value of object key using `operator` with expected value
+ * @returns {Boolean}
+ */
+function compare(obj, key, operator, ev) {
+	var av = ek(obj, key);
+	if (utils.isArray(av) && !utils.isArray(ev)) {
+		return av[operator == '$ne' ? 'every' : 'some'](function(av) {
+			return comparisonOperators[operator](av, ev);
+		});
+	} else {
+		return comparisonOperators[operator](av, ev);
+	}
+}
+
+// extract key value from object
+function ek(obj, key) {
+	return obj[key];
+}
+
+function compile(query) {
+	return eval(
+		'var func = function() {return ' + genQuery(query) + ';}; func;'
+	);
+}
+
+exports.compile = compile;
+
+},{"./utils":2}],9:[function(require,module,exports){
+'use strict';
+
+var utils = require('./utils');
+
+
+function Hook() {
+	this._hooks = {
+		afterInsert: [],
+		afterUpdate: [],
+		afterRemove: []
+	};
+}
+
+Hook.prototype._checkAction = function(action) {
+	if (action in this._hooks === false) {
+		throw new Error('Unknown action: `' + action + '`');
+	}
+};
+
+Hook.prototype.on = function(action, hook) {
+	this._checkAction(action);
+	this._hooks[action].push(hook);
+};
+
+Hook.prototype.trigger = function(action, params, callback) {
+	callback = callback || utils.noop;
+	this._checkAction(action);
+	var hooks = this._hooks[action];
+	var funcs = hooks.map(function(hook, index) {
+		return function() {
+			//console.log('>> hook = ', hook)
+			hook(params, function(err) {
+				if (err) {callback(err); return;}
+				//console.log('>> next hook = ', (index < funcs.length - 1))
+				if (index < funcs.length - 1) funcs[++index]();
+			});
+		};
+	});
+	funcs.push(callback);
+	// starts sequntial hooks execution
+	if (funcs.length) funcs[0]();
+};
+
+exports.Hook = Hook;
+
+},{"./utils":2}],8:[function(require,module,exports){
+'use strict';
+
+var utils = require('./utils');
+
+function Cursor(err, docs) {
+	this._err = err;
+	this._docs = docs;
+}
+
+Cursor.prototype.toArray = function(callback) {
+	callback = callback || utils.noop;
+	callback(this._err, this._docs);
+};
+
+Cursor.prototype.skip = function(n) {
+	return new Cursor(this._err, this._docs.slice(n));
+};
+
+Cursor.prototype.limit = function(n) {
+	return new Cursor(this._err, this._docs.slice(0, n));
+};
+
+Cursor.prototype.count = function(callback) {
+	callback = callback || utils.noop;
+	callback(this._err, this._docs.length);
+};
+
+exports.Cursor = Cursor;
+
+},{"./utils":2}],11:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -982,261 +1283,5 @@ EventEmitter.prototype.listeners = function(type) {
 };
 
 })(require("__browserify_process"))
-},{"__browserify_process":11}],7:[function(require,module,exports){
-'use strict';
-
-var utils = require('./utils');
-
-/**
- * Common notice:
- * av - actual value
- * ev - expected value
- * compile time - at this phase we translate query to js source code
- * run time - phase when we execute generated source code
- * all functions prefixed with `gen` (e.g. genQuery) executed at compile time
- */
-
-/**
- * Generate js source code for query
- * @param {Object} query Complex query e.g. {a: 1, {$or: [{b: 'test', c: 2}]}}
- * @returns {String}
- */
-function genQuery(query) {
-	var keys = Object.keys(query);
-	if (keys.length == 0) {
-		return 'true';
-	} else if (keys.length == 1) {
-		var key = Object.keys(query)[0];
-		return genExpr(key, query[key]);
-	} else {
-		return '(' + keys.map(function(key) {
-			return genExpr(key, query[key]);
-		}).join(' && ') + ')';
-	}
-
-	/**
-	 * Generate js source code for expression
-	 * @param {String} field e.g. `a`
-	 * @param {Any} ev expected `field` value
-	 * @returns {String}
-	 */
-	function genExpr(field, ev) {
-		if (isOperator(field)) {
-			return genCondition(field, ev);
-		} else {
-			if (utils.isObject(ev) && isConditionObject(ev) && !utils.isRegExp(ev)) {
-				return genComparations(field, ev);
-			} else {
-				return genComparation('$eq', field, ev);
-			}
-		}
-
-		function isOperator(key) {
-			return /^\$/.test(key);
-		}
-
-		function isConditionObject(obj) {
-			return Object.keys(obj).every(function(key) {
-				return isOperator(key);
-			});
-		}
-
-		function genComparation(operator, field, ev) {
-			if (operator in comparisonOperators === false) {
-				throw new Error('Unknown operator `' + operator + '`');
-			}
-			ev = utils.isRegExp(ev) ? ev : JSON.stringify(ev);
-			return 'compare(this, "' + field + '", "' + operator + '", ' + ev + ')';
-		}
-
-		function genComparations(field, ev) {
-			return '(' + Object.keys(ev).map(function(operator) {
-				return genComparation(operator, field, ev[operator]);
-			}).join(' && ') + ')';
-		}
-	}
-}
-
-
-/**
- * Generate js source code for query and conditional `operator` (see
- * description bellow)
- */
-var genCondition = (function() {
-	var conditionOperators = {};
-	conditionOperators.$or = function(arr) {
-		return arrCondition(arr, '||');
-	};
-	conditionOperators.$and = function(arr) {
-		return arrCondition(arr, '&&');
-	};
-
-	function arrCondition(arr, sep) {
-		return '(' + arr.map(function(val) {
-			return genQuery(val);
-		}).join(' ' + sep + ' ') + ')';
-	}
-
-	/**
-	 * Generate js source code for `query` using `operator`
-	 * @param {String} operator Logical operator e.g. `$or`
-	 * @param {Array} query Some query e.g. [{a: 1}, {b: 2}]
-	 */
-	return function (operator, query) {
-		return conditionOperators[operator](query);
-	};
-})();
-
-
-/**
- * Comparison operators
- */
-var comparisonOperators = {};
-comparisonOperators.$eq = function(av, ev) {
-	if (!utils.isRegExp(ev) && utils.isObject(ev) && utils.isObject(av)) {
-		return utils.isEqual(av, ev);
-	} else if (utils.isRegExp(ev)) {
-		return comparisonOperators.$regex(av, ev);
-	} else {
-		return av == ev;
-	}
-};
-comparisonOperators.$ne = function(av, ev) {
-	return !comparisonOperators.$eq(av, ev);
-};
-comparisonOperators.$gt = function(av, ev) { return av > ev; };
-comparisonOperators.$gte = function(av, ev) { return av >= ev; };
-comparisonOperators.$lt = function(av, ev) { return av < ev; };
-comparisonOperators.$lte = function(av, ev) { return av <= ev; };
-comparisonOperators.$in = function(av, ev) {
-	if (ev && utils.isArray(ev)) {
-		if (av && utils.isArray(av)) {
-			return ev.some(function(ev) {
-				return ~av.indexOf(ev);
-			});
-		} else {
-			return ev.some(function(ev) {
-				return comparisonOperators.$eq(av, ev);
-			});
-		}
-	} else {
-		throw new Error('$in/$nin requires an array');
-	}
-};
-comparisonOperators.$nin = function(av, ev) {
-	return !comparisonOperators.$in(av, ev);
-};
-comparisonOperators.$regex = function(av, ev) {
-	if (!utils.isRegExp(ev)) throw new Error(
-		'$regex requires instance of RegExp'
-	);
-	return ev.test(av);
-};
-
-
-/**
- * Compare value of object key using `operator` with expected value
- * @returns {Boolean}
- */
-function compare(obj, key, operator, ev) {
-	var av = ek(obj, key);
-	if (utils.isArray(av) && !utils.isArray(ev)) {
-		return av[operator == '$ne' ? 'every' : 'some'](function(av) {
-			return comparisonOperators[operator](av, ev);
-		});
-	} else {
-		return comparisonOperators[operator](av, ev);
-	}
-}
-
-// extract key value from object
-function ek(obj, key) {
-	return obj[key];
-}
-
-function compile(query) {
-	return eval(
-		'var func = function() {return ' + genQuery(query) + ';}; func;'
-	);
-}
-
-exports.compile = compile;
-
-},{"./utils":2}],8:[function(require,module,exports){
-'use strict';
-
-var utils = require('./utils');
-
-
-function Hook() {
-	this._hooks = {
-		afterInsert: [],
-		afterUpdate: [],
-		afterRemove: []
-	};
-}
-
-Hook.prototype._checkAction = function(action) {
-	if (action in this._hooks === false) {
-		throw new Error('Unknown action: `' + action + '`');
-	}
-};
-
-Hook.prototype.on = function(action, hook) {
-	this._checkAction(action);
-	this._hooks[action].push(hook);
-};
-
-Hook.prototype.trigger = function(action, params, callback) {
-	callback = callback || utils.noop;
-	this._checkAction(action);
-	var hooks = this._hooks[action];
-	var funcs = hooks.map(function(hook, index) {
-		return function() {
-			//console.log('>> hook = ', hook)
-			hook(params, function(err) {
-				if (err) {callback(err); return;}
-				//console.log('>> next hook = ', (index < funcs.length - 1))
-				if (index < funcs.length - 1) funcs[++index]();
-			});
-		};
-	});
-	funcs.push(callback);
-	// starts sequntial hooks execution
-	if (funcs.length) funcs[0]();
-};
-
-exports.Hook = Hook;
-
-},{"./utils":2}],9:[function(require,module,exports){
-'use strict';
-
-var utils = require('./utils');
-
-function Cursor(err, docs) {
-	this._err = err;
-	this._docs = docs;
-}
-
-Cursor.prototype.toArray = function(callback) {
-	callback = callback || utils.noop;
-	callback(this._err, this._docs);
-};
-
-Cursor.prototype.skip = function(n) {
-	return new Cursor(this._err, this._docs.slice(n));
-};
-
-Cursor.prototype.limit = function(n) {
-	return new Cursor(this._err, this._docs.slice(0, n));
-};
-
-Cursor.prototype.count = function(callback) {
-	callback = callback || utils.noop;
-	callback(this._err, this._docs.length);
-};
-
-exports.Cursor = Cursor;
-
-},{"./utils":2}]},{},[])
+},{"__browserify_process":11}]},{},[])
 ;
