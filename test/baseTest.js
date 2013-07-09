@@ -10,7 +10,7 @@ exports.um = um;
 exports.connectToDb = function(callback) {
 	var	driver = require(!um ? '../lib' : 'mongodb');
 	if (!um) {
-		driver.open({storage: {path: '/tmp'}}, function(err, client) {
+		driver.open({storage: {path: '/tmp/pinkydb'}}, function(err, client) {
 			callback(err, client, driver);
 		});
 	} else {
