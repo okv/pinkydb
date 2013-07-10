@@ -10,6 +10,7 @@ work in progress...
 * better cursors (clone at cursor, test erors)
 * at lib/query do more at compile time instead of runtime
 * dot notation
+* test storages, multi database, drop dummy
 * using mhook or not using hooks at all
 * better browser support (add version, drop unused code from buld)
 * docs
