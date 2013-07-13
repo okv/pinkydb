@@ -35,6 +35,18 @@ describe('collection', function() {
 			done();
 		});
 
+		it('clone document', function(done) {
+			var price = tdocs[0].price;
+			tdocs[0].price = 55;
+			fruits.findOne({_id: tdocs[0]._id}, function(err, doc) {
+				if (err) done(err);
+				expect(doc).ok();
+				expect(doc.price).equal(price);
+				tdocs[0].price = price;
+			});
+			done();
+		});
+
 		var batch = tdocs.slice(1, 3);
 		it('batch without errors', function(done) {
 			fruits.insert(batch, done);
@@ -85,16 +97,30 @@ describe('collection', function() {
 	});
 
 	describe('update', function() {
+		var repDoc = null;
 		it('single whole document', function(done) {
 			tdocs[0].name = 'pineapple';
 			tdocs[0].price = 15;
-			fruits.update({_id: tdocs[0]._id}, tdocs[0], done);
+			repDoc = tdocs[0];
+			fruits.update({_id: tdocs[0]._id}, repDoc, done);
 		});
 
 		it('check that updated document equals to stored', function(done) {
 			fruits.findOne({_id: tdocs[0]._id}, function(err, doc) {
 				if (err) done(err);
 				expect(tdocs[0]).eql(doc);
+				done();
+			});
+		});
+
+		it('clone new replacement document', function(done) {
+			var price = tdocs[0].price;
+			tdocs[0].price = 55;
+			fruits.findOne({_id: tdocs[0]._id}, function(err, doc) {
+				if (err) done(err);
+				expect(doc).ok(doc);
+				expect(doc.price).equal(price);
+				tdocs[0].price = price;
 				done();
 			});
 		});
@@ -186,17 +212,19 @@ describe('collection', function() {
 
 	describe('find', function() {
 		it('returns cloned document', function(done) {
-			var prevPrice = tdocs[0].price,
-				prevColor = tdocs[0].colors.pop();
-			tdocs[0].price == 55;
 			fruits.find({_id: tdocs[0]._id}).toArray(function(err, docs) {
 				if (err) throw err;
-				tdocs[0].price == prevPrice;
-				tdocs[0].colors.push(prevColor);
 				expect(docs).an(Array);
 				expect(docs).length(1);
-				expect(docs[0]).eql(tdocs[0]);
-				done();
+				var price = docs[0].price;
+				docs[0].price = 55;
+				fruits.find({_id: docs[0]._id}).toArray(function(err, docs) {
+					if (err) throw err;
+					expect(docs).an(Array);
+					expect(docs).length(1);
+					expect(docs[0].price).eql(price);
+					done();
+				});
 			});
 		});
 
