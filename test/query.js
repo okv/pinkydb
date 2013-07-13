@@ -217,6 +217,18 @@ describe('query', function() {
 			result: tdocs.slice(0, 2),
 			// mongodb 2.2.3/driver 1.3.10 doesn`t support function instead of query
 			skip: baseTest.um
+		},
+		'dot notation array equal simple value': {
+			query: {'add.colors': 'red'},
+			result: tdocs.slice(0, 2)
+		},
+		'dot notation array index equal simple value': {
+			query: {'add.colors.1': 'red'},
+			result: tdocs.slice(1, 2)
+		},
+		'dot notation property in array of objects equal to simple value': {
+			query: {'add.production.country': 'India'},
+			result: tdocs.slice(2, 3)
 		}
 	};
 
