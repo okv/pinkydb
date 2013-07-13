@@ -213,13 +213,13 @@ describe('collection', function() {
 	describe('find', function() {
 		it('returns cloned document', function(done) {
 			fruits.find({_id: tdocs[0]._id}).toArray(function(err, docs) {
-				if (err) throw err;
+				if (err) done(err);
 				expect(docs).an(Array);
 				expect(docs).length(1);
 				var price = docs[0].price;
 				docs[0].price = 55;
 				fruits.find({_id: docs[0]._id}).toArray(function(err, docs) {
-					if (err) throw err;
+					if (err) done(err);
 					expect(docs).an(Array);
 					expect(docs).length(1);
 					expect(docs[0].price).eql(price);
@@ -230,7 +230,7 @@ describe('collection', function() {
 
 		it('with emty results returns empty array', function(done) {
 			fruits.find({price: 'free'}).toArray(function(err, docs) {
-				if (err) throw err;
+				if (err) done(err);
 				expect(docs).an(Array);
 				expect(docs).length(0);
 				done();
@@ -242,7 +242,7 @@ describe('collection', function() {
 	describe('findOne', function() {
 		it('emty results returns null', function(done) {
 			fruits.findOne({price: 'free'}, function(err, doc) {
-				if (err) throw err;
+				if (err) done(err);
 				expect(doc).eql(null);
 				done();
 			});
