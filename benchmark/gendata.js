@@ -8,11 +8,13 @@ var count = process.env.NODE_TD_COUNT || 10000,
 function generate(n) {
 	var docs = [];
 	for (var i = 0; i < n; i++) {
-		var fullName = getRandomFullName();
+		var firstName = getRandomFirstName(),
+			lastName = getRandomLastName(),
+			fullName = firstName + ' ' + lastName;
 		var doc = {
 			name: {
-				first: fullName.split(' ')[0],
-				last: fullName.split(' ')[1],
+				first: firstName,
+				last: lastName,
 				full: fullName
 			},
 			contacts: {
@@ -37,30 +39,54 @@ function generate(n) {
  * Helpers use above
  */
 
-var fullNames = [
-	'Elina Panek',
-	'Dillon Simons',
-	'Saundra Severin',
-	'Harmony Brazell',
-	'Ellie Polasek',
-	'Erlinda Shannon',
-	'Nancie Kowalski',
-	'Carol Royse',
-	'Pearly Mazon',
-	'Mabel Gipe',
-	'Eugena Wilks',
-	'Cyrus Shah',
-	'Delena Scheuerman',
-	'Shenita Henery',
-	'Aisha Monzo',
-	'Nikita Sigmund',
-	'Lavette Longwell',
-	'Alisia Strouth',
-	'Tanisha Maclin',
-	'Margorie Hodes',
+var firstNames = [
+	'Elina',
+	'Dillon',
+	'Saundra',
+	'Harmony',
+	'Ellie',
+	'Erlinda',
+	'Nancie',
+	'Carol',
+	'Pearly',
+	'Mabel',
+	'Eugena',
+	'Cyrus',
+	'Delena',
+	'Shenita',
+	'Aisha',
+	'Nikita',
+	'Lavette',
+	'Alisia',
+	'Tanisha',
+	'Margorie'
 ];
 
-var getRandomFullName = randomArrayItem(fullNames);
+var lastNames = [
+	'Panek',
+	'Simons',
+	'Severin',
+	'Brazell',
+	'Polasek',
+	'Shannon',
+	'Kowalski',
+	'Royse',
+	'Mazon',
+	'Gipe',
+	'Wilks',
+	'Shah',
+	'Scheuerman',
+	'Henery',
+	'Monzo',
+	'Sigmund',
+	'Longwell',
+	'Strouth',
+	'Maclin',
+	'Hodes'
+];
+
+var getRandomFirstName = randomArrayItem(firstNames);
+var getRandomLastName = randomArrayItem(lastNames);
 
 function getRandomInt(min, max) {
 	return Math.floor(Math.random() * (max - min + 1)) + min;

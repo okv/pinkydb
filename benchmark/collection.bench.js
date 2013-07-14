@@ -44,5 +44,22 @@ describe('collection', function() {
 				$lt: new Date('October 01, 2000 00:00:00').getTime()
 			}}).toArray(done);
 		});
+
+		it('by first name', function(done) {
+			users.find({'name.first': 'Dillon'}).toArray(done);
+		});
+
+		it('by last name', function(done) {
+			users.find({'name.last': 'Simons'}).toArray(done);
+		});
+
+		it('by full name', function(done) {
+			users.find({'name.full': 'Dillon Simons'}).toArray(done);
+		});
+
+		it('by email', function(done) {
+			users.find({'contacts.emails': 'dillon.simons@mail.com'}).toArray(done);
+		});
 	});
+
 });
