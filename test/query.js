@@ -201,14 +201,22 @@ describe('query', function() {
 			}],
 			result: tdocs.slice(0, 1)
 		},
+		'simple none string value doesn`t mathces to regexp': {
+			queries: [{
+				price: /^5$/
+			}, {
+				price: /^5$/
+			}],
+			result: [],
+			skip: !baseTest.um
+		},
 		'array matches to regexp': {
 			queries: [{
-				pprices: {$regex: /^3$/}
+				'add.colors': {$regex: /^ReD$/i}
 			}, {
-				pprices: /^3$/
+				'add.colors': /^ReD$/i
 			}],
-			result: tdocs.slice(0, 1),
-			skip: baseTest.um
+			result: tdocs.slice(0, 2)
 		},
 		'function instead of query': {
 			query: function() {
