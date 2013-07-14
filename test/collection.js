@@ -148,6 +148,97 @@ describe('collection', function() {
 				done();
 			});
 		});
+
+		it('simple field using $set', function(done) {
+			var newName = 'updated ' + tdocs[0].name;
+			fruits.update(
+				{_id: tdocs[0]._id},
+				{$set: {name: newName}},
+				function(err) {
+					if (err) done(err);
+					fruits.findOne({_id: tdocs[0]._id}, function(err, doc) {
+						if (err) done(err);
+						expect(doc).ok();
+						expect(doc.name).equal(newName);
+						done();
+						tdocs[0].name = newName;
+					});
+				}
+			);
+		});
+
+		it('value in array by index using $set', function(done) {
+			var newColor = 'yellow';
+			fruits.update(
+				{_id: tdocs[0]._id},
+				{$set: {'colors.1': newColor}},
+				function(err) {
+					if (err) done(err);
+					fruits.findOne({_id: tdocs[0]._id}, function(err, doc) {
+						if (err) done(err);
+						expect(doc).ok();
+						expect(doc.colors[1]).equal(newColor);
+						done();
+						tdocs[0].colors[1] = newColor;
+					});
+				}
+			);
+		});
+
+		it('add array field using $set (expect error)', function(done) {
+			fruits.update(
+				{_id: tdocs[0]._id},
+				{$set: {'colors.abc': 'def'}},
+				function(err) {
+					expect(err).ok();
+					expect(err).an(Error);
+					expect(err.message).equal(
+						'can\'t append to array using string field name [abc]'
+					);
+					done();
+				}
+			);
+		});
+
+		it('add new field using $set', function(done) {
+			var production = {
+				'India': {ratio: 20},
+				'Uganda': {ratio: 8},
+				'China': {ratio: 7}
+			};
+			fruits.update(
+				{_id: tdocs[2]._id},
+				{$set: {'production': production}},
+				function(err) {
+					if (err) done(err);
+					fruits.findOne({_id: tdocs[2]._id}, function(err, doc) {
+						if (err) done(err);
+						expect(doc).ok();
+						expect(doc.production).eql(production);
+						done();
+						tdocs[2].production = production;
+					});
+				}
+			);
+		});
+
+		it('field at subdocument using $set', function(done) {
+			var newRatio = 22;
+			fruits.update(
+				{_id: tdocs[2]._id},
+				{$set: {'production.India.ratio': newRatio}},
+				function(err) {
+					if (err) done(err);
+					fruits.findOne({_id: tdocs[2]._id}, function(err, doc) {
+						if (err) done(err);
+						expect(doc).ok();
+						expect(doc.production.India.ratio).equal(newRatio);
+						done();
+						tdocs[2].production.India.ratio = newRatio;
+					});
+				}
+			);
+		});
 	});
 
 	describe('remove', function() {
