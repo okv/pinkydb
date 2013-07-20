@@ -257,6 +257,28 @@ describe('collection', function() {
 				}
 			);
 		});
+
+		it('rename field using $rename', function(done) {
+			var production = tdocs[2].production;
+			fruits.update(
+				{_id: tdocs[2]._id},
+				{$rename: {'production': 'manufacture'}},
+				function(err) {
+					if (err) {done(err); return;}
+					fruits.findOne({_id: tdocs[2]._id}, function(err, doc) {
+						if (err) {done(err); return;}
+						expect(doc).ok();
+						expect(doc).not.have.key('production');
+						expect(doc).have.key('manufacture');
+						expect(doc.manufacture).eql(production);
+						delete tdocs[2].production;
+						tdocs[2].manufacture = production;
+						expect(doc).eql(tdocs[2]);
+						done();
+					});
+				}
+			);
+		});
 	});
 
 	describe('remove', function() {
