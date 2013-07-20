@@ -12,3 +12,11 @@ var docs = JSON.parse(require('fs').readFileSync('/tmp/pinkydb-benchmark-data'))
 console.time('b'); docs.filter(function(doc) { return doc.birthday > 654724800000 && doc.birthday < 970340400000 }).length; console.timeEnd('b')
 
 var utils = require('./lib/utils'); utils.get({a: [{v: 1, c: [{v: 3}]}, {v: 2, c: [{v: 4, d: [{a: 111}]}, {v: 5, d: [{a: 222}]}] }]}, 'a.c.d.a');
+
+* dot notation
+* at lib/query do more at compile time instead of runtime
+* better browser support (add version, drop unused code from build)
+* make Collection api compatible with mongodb native (include cuntructor)
+* serialize async
+* add to file on insert/update
+* sort
