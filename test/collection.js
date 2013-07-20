@@ -286,6 +286,39 @@ describe('collection', function() {
 				}
 			);
 		});
+
+		it('push element to array', function(done) {
+			var newColor = 'blue';
+			fruits.update(
+				{_id: tdocs[2]._id},
+				{$push: {colors: newColor}},
+				function(err) {
+					if (err) {done(err); return;}
+					fruits.findOne({_id: tdocs[2]._id}, function(err, doc) {
+						if (err) {done(err); return;}
+						expect(doc).ok();
+						expect(doc.colors[doc.colors.length-1]).equal(newColor);
+						delete tdocs[2].colors.push(newColor);
+						expect(doc).eql(tdocs[2]);
+						done();
+					});
+				}
+			);
+		});
+
+		it('push element to non-array (expect error)', function(done) {
+			fruits.update(
+				{_id: tdocs[2]._id},
+				{$push: {price: 222}},
+				function(err) {
+					expect(err).ok();
+					expect(err.message).equal(
+						'Cannot apply $push/$pushAll modifier to non-array'
+					);
+					done();
+				}
+			);
+		});
 	});
 
 	describe('remove', function() {
