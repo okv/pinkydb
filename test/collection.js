@@ -222,19 +222,26 @@ describe('collection', function() {
 			);
 		});
 
-		it('field at subdocument using $set', function(done) {
-			var newRatio = 22;
+		it('fields at subdocument using $set', function(done) {
+			var newRatioI = 22,
+				newRatioU = 10;
 			fruits.update(
 				{_id: tdocs[2]._id},
-				{$set: {'production.India.ratio': newRatio}},
+				{$set: {
+					'production.India.ratio': newRatioI,
+					'production.Uganda.ratio': newRatioU
+				}},
 				function(err) {
 					if (err) {done(err); return;}
 					fruits.findOne({_id: tdocs[2]._id}, function(err, doc) {
 						if (err) {done(err); return;}
 						expect(doc).ok();
-						expect(doc.production.India.ratio).equal(newRatio);
+						expect(doc.production.India.ratio).equal(newRatioI);
+						expect(doc.production.Uganda.ratio).equal(newRatioU);
+						tdocs[2].production.India.ratio = newRatioI;
+						tdocs[2].production.Uganda.ratio = newRatioU;
+						expect(doc).eql(tdocs[2]);
 						done();
-						tdocs[2].production.India.ratio = newRatio;
 					});
 				}
 			);
