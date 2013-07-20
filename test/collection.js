@@ -352,6 +352,42 @@ describe('collection', function() {
 				}
 			);
 		});
+
+		it('pull element from array', function(done) {
+			var color = 'blue';
+			fruits.update(
+				{_id: tdocs[2]._id},
+				{$pull: {colors: color}},
+				function(err) {
+					if (err) {done(err); return;}
+					fruits.findOne({_id: tdocs[2]._id}, function(err, doc) {
+						if (err) {done(err); return;}
+						expect(doc).ok();
+						do {
+							var index = tdocs[2].colors.indexOf(color);
+							if (index != -1) tdocs[2].colors.splice(index, 1);
+						} while (index != -1);
+						expect(doc.colors).eql(tdocs[2].colors);
+						expect(doc).eql(tdocs[2]);
+						done();
+					});
+				}
+			);
+		});
+
+		it('pull element from non-array (expect err)', function(done) {
+			fruits.update(
+				{_id: tdocs[2]._id},
+				{$pull: {price: 222}},
+				function(err) {
+					expect(err).ok();
+					expect(err.message).equal(
+						'Cannot apply $pull/$pullAll modifier to non-array'
+					);
+					done();
+				}
+			);
+		});
 	});
 
 	describe('remove', function() {
