@@ -239,6 +239,24 @@ describe('collection', function() {
 				}
 			);
 		});
+
+		it('remove field from subdocument using $unset', function(done) {
+			fruits.update(
+				{_id: tdocs[2]._id},
+				{$unset: {'production.India.ratio': 1}},
+				function(err) {
+					if (err) done(err);
+					fruits.findOne({_id: tdocs[2]._id}, function(err, doc) {
+						if (err) done(err);
+						expect(doc).ok();
+						expect(doc.production.India).not.have.key('ratio');
+						delete tdocs[2].production.India.ratio;
+						expect(doc).eql(tdocs[2]);
+						done();
+					});
+				}
+			);
+		});
 	});
 
 	describe('remove', function() {
