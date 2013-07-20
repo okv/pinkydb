@@ -339,7 +339,7 @@ describe('collection', function() {
 			);
 		});
 
-		it('push element via $pushAll (expect error)', function(done) {
+		it('push single element via $pushAll (expect error)', function(done) {
 			fruits.update(
 				{_id: tdocs[2]._id},
 				{$pushAll: {colors: 'blue'}},
@@ -383,6 +383,44 @@ describe('collection', function() {
 					expect(err).ok();
 					expect(err.message).equal(
 						'Cannot apply $pull/$pullAll modifier to non-array'
+					);
+					done();
+				}
+			);
+		});
+
+		it('pull elements from array', function(done) {
+			var colors = ['green', 'maroon'];
+			fruits.update(
+				{_id: tdocs[2]._id},
+				{$pullAll: {colors: colors}},
+				function(err) {
+					if (err) {done(err); return;}
+					fruits.findOne({_id: tdocs[2]._id}, function(err, doc) {
+						if (err) {done(err); return;}
+						expect(doc).ok();
+						colors.forEach(function(color) {
+							do {
+								var index = tdocs[2].colors.indexOf(color);
+								if (index != -1) tdocs[2].colors.splice(index, 1);
+							} while (index != -1);
+						});
+						expect(doc.colors).eql(tdocs[2].colors);
+						expect(doc).eql(tdocs[2]);
+						done();
+					});
+				}
+			);
+		});
+
+		it('pull single elements via $pullAll (expect error)', function(done) {
+			fruits.update(
+				{_id: tdocs[2]._id},
+				{$pullAll: {colors: 'maroon'}},
+				function(err) {
+					expect(err).ok();
+					expect(err.message).equal(
+						'Modifier $pushAll/pullAll allowed for arrays only'
 					);
 					done();
 				}
