@@ -39,7 +39,7 @@ describe('collection', function() {
 			var price = tdocs[0].price;
 			tdocs[0].price = 55;
 			fruits.findOne({_id: tdocs[0]._id}, function(err, doc) {
-				if (err) done(err);
+				if (err) {done(err); return;}
 				expect(doc).ok();
 				expect(doc.price).equal(price);
 				tdocs[0].price = price;
@@ -86,7 +86,7 @@ describe('collection', function() {
 			var allDocs = {};
 			tdocs.forEach(function(doc){ allDocs[doc._id] = doc; });
 			fruits.find({}).toArray(function(err, docs) {
-				if (err) done(err);
+				if (err) {done(err); return;}
 				docs.forEach(function(doc) {
 					expect(allDocs).have.key(String(doc._id));
 					expect(allDocs[doc._id]).eql(doc);
@@ -107,7 +107,7 @@ describe('collection', function() {
 
 		it('check that updated document equals to stored', function(done) {
 			fruits.findOne({_id: tdocs[0]._id}, function(err, doc) {
-				if (err) done(err);
+				if (err) {done(err); return;}
 				expect(tdocs[0]).eql(doc);
 				done();
 			});
@@ -117,7 +117,7 @@ describe('collection', function() {
 			var price = tdocs[0].price;
 			tdocs[0].price = 55;
 			fruits.findOne({_id: tdocs[0]._id}, function(err, doc) {
-				if (err) done(err);
+				if (err) {done(err); return;}
 				expect(doc).ok(doc);
 				expect(doc.price).equal(price);
 				tdocs[0].price = price;
@@ -155,9 +155,9 @@ describe('collection', function() {
 				{_id: tdocs[0]._id},
 				{$set: {name: newName}},
 				function(err) {
-					if (err) done(err);
+					if (err) {done(err); return;}
 					fruits.findOne({_id: tdocs[0]._id}, function(err, doc) {
-						if (err) done(err);
+						if (err) {done(err); return;}
 						expect(doc).ok();
 						expect(doc.name).equal(newName);
 						done();
@@ -173,9 +173,9 @@ describe('collection', function() {
 				{_id: tdocs[0]._id},
 				{$set: {'colors.1': newColor}},
 				function(err) {
-					if (err) done(err);
+					if (err) {done(err); return;}
 					fruits.findOne({_id: tdocs[0]._id}, function(err, doc) {
-						if (err) done(err);
+						if (err) {done(err); return;}
 						expect(doc).ok();
 						expect(doc.colors[1]).equal(newColor);
 						done();
@@ -210,9 +210,9 @@ describe('collection', function() {
 				{_id: tdocs[2]._id},
 				{$set: {'production': production}},
 				function(err) {
-					if (err) done(err);
+					if (err) {done(err); return;}
 					fruits.findOne({_id: tdocs[2]._id}, function(err, doc) {
-						if (err) done(err);
+						if (err) {done(err); return;}
 						expect(doc).ok();
 						expect(doc.production).eql(production);
 						done();
@@ -228,9 +228,9 @@ describe('collection', function() {
 				{_id: tdocs[2]._id},
 				{$set: {'production.India.ratio': newRatio}},
 				function(err) {
-					if (err) done(err);
+					if (err) {done(err); return;}
 					fruits.findOne({_id: tdocs[2]._id}, function(err, doc) {
-						if (err) done(err);
+						if (err) {done(err); return;}
 						expect(doc).ok();
 						expect(doc.production.India.ratio).equal(newRatio);
 						done();
@@ -245,9 +245,9 @@ describe('collection', function() {
 				{_id: tdocs[2]._id},
 				{$unset: {'production.India.ratio': 1}},
 				function(err) {
-					if (err) done(err);
+					if (err) {done(err); return;}
 					fruits.findOne({_id: tdocs[2]._id}, function(err, doc) {
-						if (err) done(err);
+						if (err) {done(err); return;}
 						expect(doc).ok();
 						expect(doc.production.India).not.have.key('ratio');
 						delete tdocs[2].production.India.ratio;
@@ -266,7 +266,7 @@ describe('collection', function() {
 
 		it('find names to remove', function(done) {
 			fruits.find({}).skip(1).limit(2).toArray(function(err, docs) {
-				if (err) done(err);
+				if (err) {done(err); return;}
 				expect(docs).length(2);
 				docsToRemove = tdocs.slice(1, 3);
 				namesToRemove = docsToRemove.map(function(doc) {
@@ -279,7 +279,7 @@ describe('collection', function() {
 
 		it('find documents before remove', function(done) {
 			fruits.find({name: {$in: namesToRemove}}).toArray(function(err, docs) {
-				if (err) done(err);
+				if (err) {done(err); return;}
 				expect(docs).eql(docsToRemove);
 				done();
 			});
@@ -291,7 +291,7 @@ describe('collection', function() {
 
 		it('expect documents can`t be find after remove', function(done) {
 			fruits.find({name: {$in: namesToRemove}}).toArray(function(err, docs) {
-				if (err) done(err);
+				if (err) {done(err); return;}
 				expect(docs).length(0);
 				done();
 			});
@@ -299,7 +299,7 @@ describe('collection', function() {
 
 		it('expect collection only 2 documents', function(done) {
 			fruits.find().toArray(function(err, docs) {
-				if (err) done(err);
+				if (err) {done(err); return;}
 				expect(docs).equalSet(collectionDocsAfterRemove);
 				done();
 			});
@@ -308,10 +308,10 @@ describe('collection', function() {
 		// simple current storage engine test
 		it('new connection should load only 2 document', function(done) {
 			baseTest.connectToDb(function(err, client) {
-				if (err) done(err);
+				if (err) {done(err); return;}
 				var fruits = client.db('pinkydbTest').collection('fruits');
 				fruits.find().toArray(function(err, docs) {
-					if (err) done(err);
+					if (err) {done(err); return;}
 					expect(docs).equalSet(collectionDocsAfterRemove);
 					done();
 				});
@@ -322,13 +322,13 @@ describe('collection', function() {
 	describe('find', function() {
 		it('returns cloned document', function(done) {
 			fruits.find({_id: tdocs[0]._id}).toArray(function(err, docs) {
-				if (err) done(err);
+				if (err) {done(err); return;}
 				expect(docs).an(Array);
 				expect(docs).length(1);
 				var price = docs[0].price;
 				docs[0].price = 55;
 				fruits.find({_id: docs[0]._id}).toArray(function(err, docs) {
-					if (err) done(err);
+					if (err) {done(err); return;}
 					expect(docs).an(Array);
 					expect(docs).length(1);
 					expect(docs[0].price).eql(price);
@@ -339,7 +339,7 @@ describe('collection', function() {
 
 		it('with emty results returns empty array', function(done) {
 			fruits.find({price: 'free'}).toArray(function(err, docs) {
-				if (err) done(err);
+				if (err) {done(err); return;}
 				expect(docs).an(Array);
 				expect(docs).length(0);
 				done();
@@ -351,7 +351,7 @@ describe('collection', function() {
 	describe('findOne', function() {
 		it('emty results returns null', function(done) {
 			fruits.findOne({price: 'free'}, function(err, doc) {
-				if (err) done(err);
+				if (err) {done(err); return;}
 				expect(doc).eql(null);
 				done();
 			});
