@@ -426,6 +426,43 @@ describe('collection', function() {
 				}
 			);
 		});
+
+		it('push element to set', function(done) {
+			var color = 'khaki';
+			fruits.update(
+				{_id: tdocs[2]._id},
+				{$addToSet: {colors: color}},
+				function(err) {
+					if (err) {done(err); return;}
+					fruits.findOne({_id: tdocs[2]._id}, function(err, doc) {
+						if (err) {done(err); return;}
+						expect(doc).ok();
+						expect(doc.colors[doc.colors.length-1]).equal(color);
+						tdocs[2].colors.push(color);
+						expect(doc).eql(tdocs[2]);
+						done();
+					});
+				}
+			);
+		});
+
+		it('push same element to set do nothing', function(done) {
+			var color = 'khaki';
+			fruits.update(
+				{_id: tdocs[2]._id},
+				{$addToSet: {colors: color}},
+				function(err) {
+					if (err) {done(err); return;}
+					fruits.findOne({_id: tdocs[2]._id}, function(err, doc) {
+						if (err) {done(err); return;}
+						expect(doc).ok();
+						expect(doc.colors).eql(tdocs[2].colors);
+						expect(doc).eql(tdocs[2]);
+						done();
+					});
+				}
+			);
+		});
 	});
 
 	describe('remove', function() {
