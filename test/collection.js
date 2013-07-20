@@ -265,6 +265,52 @@ describe('collection', function() {
 			);
 		});
 
+		it('increments number field', function(done) {
+			var amount = 2;
+			fruits.update(
+				{_id: tdocs[2]._id},
+				{$inc: {price: amount}},
+				function(err) {
+					if (err) {done(err); return;}
+					fruits.findOne({_id: tdocs[2]._id}, function(err, doc) {
+						if (err) {done(err); return;}
+						expect(doc).ok();
+						expect(doc.price).eql(tdocs[2].price + amount);
+						tdocs[2].price = tdocs[2].price + amount;
+						expect(doc).eql(tdocs[2]);
+						done();
+					});
+				}
+			);
+		});
+
+		it('increments non-number field (expect error)', function(done) {
+			fruits.update(
+				{_id: tdocs[2]._id},
+				{$inc: {colors: 2}},
+				function(err) {
+					expect(err).ok();
+					expect(err.message).equal(
+						'Cannot apply $inc modifier to non-number'
+					);
+					done();
+				}
+			);
+		});
+
+		it('increments on not-number amount (expect error)', function(done) {
+			fruits.update(
+				{_id: tdocs[2]._id},
+				{$inc: {price: 'a'}},
+				function(err) {
+					expect(err).ok();
+					expect(err.message).equal(
+						'Modifier $inc allowed for numbers only'
+					);
+					done();
+				}
+			);
+		});
 		it('rename field using $rename', function(done) {
 			var production = tdocs[2].production;
 			fruits.update(
@@ -463,6 +509,7 @@ describe('collection', function() {
 				}
 			);
 		});
+
 	});
 
 	describe('remove', function() {
