@@ -138,16 +138,57 @@ describe('collection', function() {
 			tdocs[0]._id--;
 		});
 
-		(baseTest.um ? it.skip : it)
-		('expect that multi update unsupported', function(done) {
+		it('expect error when whole doc multi update', function(done) {
 			fruits.update({}, tdocs[0], {multi: true}, function(err) {
 				expect(err).ok();
 				expect(err).a(Error);
-				expect(err.message).ok();
-				expect(err.message).contain('currently unsupported');
+				expect(err.message).equal(
+					'multi update only works with $ operators'
+				);
 				done();
 			});
 		});
+
+		it('multi docs query with `multi` flag updates multi docs', function(done) {
+			var amount = 10;
+			fruits.update({}, {$inc: {price: amount}}, {multi: true}, function(err) {
+				fruits.find().toArray(function(err, docs) {
+					if (err) {done(err); return;}
+					var tdocsHash = createHash(tdocs, '_id'),
+						equalCount = 0;
+					docs.forEach(function(doc) {
+						if (doc.price === tdocsHash[doc._id].price + amount) {
+							equalCount++;
+							tdocsHash[doc._id].price += amount;
+						}
+					});
+					expect(equalCount).equal(tdocs.length);
+					done();
+				});
+			});
+		});
+
+		it(
+			'multi docs query without `multi` flag updates only onde doc',
+			function(done) {
+				var amount = 10;
+				fruits.update({}, {$inc: {price: amount}}, function(err) {
+					fruits.find().toArray(function(err, docs) {
+						if (err) {done(err); return;}
+						var tdocsHash = createHash(tdocs, '_id'),
+							equalCount = 0;
+						docs.forEach(function(doc) {
+							if (doc.price === tdocsHash[doc._id].price + amount) {
+								equalCount++;
+								tdocsHash[doc._id].price += amount;
+							}
+						});
+						expect(equalCount).equal(1);
+						done();
+					});
+				});
+			}
+		);
 
 		it('simple field using $set', function(done) {
 			var newName = 'updated ' + tdocs[0].name;
@@ -611,3 +652,15 @@ describe('collection', function() {
 		});
 	});
 });
+
+
+/**
+ * Helpers used above
+ */
+function createHash(array, field) {
+	var hash = {};
+	array.forEach(function(item) {
+		hash[item[field]] = item;
+	});
+	return hash;
+}
