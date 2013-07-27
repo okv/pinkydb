@@ -551,6 +551,35 @@ describe('collection', function() {
 			);
 		});
 
+		it('inserts new document with `upsert`', function(done) {
+			var newDoc = {name: 'kiwi', price: 10, colors: ['green']};
+			fruits.update({name: newDoc.name}, newDoc, {upsert: true}, function(err) {
+				if (err) {done(err); return;}
+				fruits.find().toArray(function(err, docs) {
+					if (err) {done(err); return;}
+					docs.forEach(function(doc) {
+						if (doc.name == newDoc.name) newDoc._id = doc._id;
+					});
+					tdocs.push(newDoc);
+					expect(docs).equalSet(tdocs);
+					done();
+				});
+			});
+		});
+
+		it('new document with `upsert`', function(done) {
+			var upDoc = {name: 'kiwi', price: 12, colors: ['green']};
+			fruits.update({name: upDoc.name}, upDoc, {upsert: true}, function(err) {
+				if (err) {done(err); return;}
+				fruits.find().toArray(function(err, docs) {
+					if (err) {done(err); return;}
+					tdocs[tdocs.length-1].price = upDoc.price;
+					expect(docs).equalSet(tdocs);
+					done();
+				});
+			});
+		});
+
 	});
 
 	describe('remove', function() {
@@ -566,7 +595,12 @@ describe('collection', function() {
 				namesToRemove = docsToRemove.map(function(doc) {
 					return doc.name;
 				});
-				collectionDocsAfterRemove = [tdocs[0], tdocs[3]];
+				collectionDocsAfterRemove = [];
+				tdocs.forEach(function(doc) {
+					if (doc._id != tdocs[1]._id && doc._id != tdocs[2]._id) {
+						collectionDocsAfterRemove.push(doc);
+					}
+				});
 				done();
 			});
 		});
@@ -591,7 +625,7 @@ describe('collection', function() {
 			});
 		});
 
-		it('expect collection only 2 documents', function(done) {
+		it('expect collection has expected documents after remove', function(done) {
 			fruits.find().toArray(function(err, docs) {
 				if (err) {done(err); return;}
 				expect(docs).equalSet(collectionDocsAfterRemove);
@@ -600,7 +634,7 @@ describe('collection', function() {
 		});
 
 		// simple current storage engine test
-		it('new connection should load only 2 document', function(done) {
+		it('new connection should load only documents after remove', function(done) {
 			baseTest.connectToDb(function(err, client) {
 				if (err) {done(err); return;}
 				var fruits = client.db('pinkydbTest').collection('fruits');
