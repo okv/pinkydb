@@ -6,8 +6,6 @@ work in progress...
 
 ## TODO (before release)
 
-* multi update support
-* upsert support
 * basic indexing
 * return freezed objects instead of cloned
 * better cursors (clone at cursor, test erors)
