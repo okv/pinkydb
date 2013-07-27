@@ -580,6 +580,22 @@ describe('collection', function() {
 			});
 		});
 
+		(baseTest.um ? it.skip : it)
+		('supports `upsert` only with whole document update', function(done) {
+			fruits.update(
+				{name: 'kivi2'},
+				{$set: {price: 20}},
+				{upsert: true},
+				function(err) {
+					expect(err).ok();
+					expect(err.message).equal(
+						'Curretly upsert supports only whole document updates'
+					);
+					done();
+				}
+			);
+		});
+
 	});
 
 	describe('remove', function() {
