@@ -7,10 +7,13 @@ var expect = require('expect.js'),
 var um = process.env.NODE_USE_MONGODB;
 exports.um = um;
 
-exports.connectToDb = function(callback) {
+exports.connectToDb = function(storage, callback) {
+	var args = utils.toArray(arguments),
+		storage = !utils.isFunction(args[0]) ? args[0] : {path: '/tmp/pinkydb'},
+		callback = (utils.isFunction(args[0]) ? args[0] : args[1]) || utils.noop;
 	var	driver = require(!um ? '../lib' : 'mongodb');
 	if (!um) {
-		driver.open({storage: {path: '/tmp/pinkydb'}}, function(err, client) {
+		driver.open({storage: storage}, function(err, client) {
 			callback(err, client, driver);
 		});
 	} else {

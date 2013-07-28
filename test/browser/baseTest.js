@@ -3,8 +3,11 @@ var utils = pinkydb.utils;
 
 baseTest = {};
 baseTest.um = false;
-baseTest.connectToDb = function(callback) {
-	pinkydb.open({storage: {type: 'memory'}}, function(err, client) {
+baseTest.connectToDb = function(storage, callback) {
+	var args = utils.toArray(arguments),
+		storage = !utils.isFunction(args[0]) ? args[0] : {type: 'memory'},
+		callback = (utils.isFunction(args[0]) ? args[0] : args[1]) || utils.noop;
+	pinkydb.open({storage: storage}, function(err, client) {
 		callback(err, client);
 	});
 };
